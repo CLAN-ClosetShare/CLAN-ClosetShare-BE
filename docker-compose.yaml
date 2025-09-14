@@ -1,0 +1,19 @@
+services:
+  clan:
+    container_name: clan-be
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./src:/app/src
+    command: pnpm start:dev
+    networks:
+      - clan-network
+
+networks:
+  clan-network:
+    driver: bridge
