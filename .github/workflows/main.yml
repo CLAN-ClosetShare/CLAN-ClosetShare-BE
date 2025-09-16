@@ -12,5 +12,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Create env file
+        run: |
+          echo "DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}" >> .env
+          echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env
+          echo "DATABASE_HOST=${{ secrets.DATABASE_HOST }}" >> .env
+          echo "DATABASE_PORT=${{ secrets.DATABASE_PORT }}" >> .env
+          echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> .env
+          echo "DATABASE_SCHEMA=${{ secrets.DATABASE_SCHEMA }}" >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+
       - name: Run compose up container
         run: docker compose -f docker-compose.yaml up --build -d
