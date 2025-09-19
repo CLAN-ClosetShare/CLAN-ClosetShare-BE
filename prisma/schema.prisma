@@ -10,14 +10,15 @@ datasource db {
 
 model User {
   id        String   @id @default(cuid())
-  username     String   @unique
+  username     String?   @unique
   name      String
   email    String   @unique
   password String
   avatar_url  String?
   bio       String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  phone_number  String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   status    USER_STATUS @default(UNVERIFIED)
   role    USER_ROLE   @default(USER)
   sessions  Session[]
@@ -42,8 +43,8 @@ model Session {
   userId    String
   hash    String   @unique
   user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("sessions")
 }

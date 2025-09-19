@@ -21,6 +21,10 @@ jobs:
           echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> .env
           echo "DATABASE_SCHEMA=${{ secrets.DATABASE_SCHEMA }}" >> .env
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "AUTH_ACCESS_TOKEN_SECRET=${{ secrets.AUTH_ACCESS_TOKEN_SECRET }}" >> .env
+          echo "AUTH_ACCESS_TOKEN_EXPIRATION_TIME=${{ secrets.AUTH_ACCESS_TOKEN_EXPIRATION_TIME }}" >> .env
+          echo "AUTH_REFRESH_TOKEN_SECRET=${{ secrets.AUTH_REFRESH_TOKEN_SECRET }}" >> .env
+          echo "AUTH_REFRESH_TOKEN_EXPIRATION_TIME=${{ secrets.AUTH_REFRESH_TOKEN_EXPIRATION_TIME }}" >> .env
 
       - name: Run compose up container
         run: docker compose -f docker-compose.yaml up --build -d
