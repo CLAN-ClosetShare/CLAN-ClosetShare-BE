@@ -10,7 +10,7 @@ import { hashPassword } from 'src/utils/passwords';
 import { Branded } from 'src/common/types/types';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from 'src/config/config.type';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from '../user/user.service';
 import ms from 'ms';
 import crypto from 'crypto';
