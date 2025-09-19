@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username     String?   @unique
+  name      String
+  email    String   @unique
+  password String
+  avatar_url  String?
+  bio       String?
+  phone_number  String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  status    USER_STATUS @default(UNVERIFIED)
+  role    USER_ROLE   @default(USER)
+  sessions  Session[]
+  shop_staffs ShopStaff[]
+
+  @@map("users")
+}
+
+enum USER_STATUS {
+  UNVERIFIED
+  VERIFIED
+  BANNED
+}
+
+enum USER_ROLE {
+  USER
+  MOD
+  ADMIN
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  hash    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("sessions")
+}
+
+enum SHOP_STATUS {
+  UNVERIFIED
+  VERIFIED
+  SUSPENDED
+}
+
+model Shop {
+  id       String   @id @default(cuid())
+  name      String
+  description String?
+  address   String
+  phone_number String?
+  email     String?
+  avatar_url  String?
+  background_url String?
+  rating   Float    @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  status   SHOP_STATUS @default(UNVERIFIED)
+  staffs   ShopStaff[]
+
+  @@map("shops")
+}
+
+model ShopStaff {
+  id       String   @id @default(cuid())
+  userId    String
+  shopId    String
+  joined_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  shop      Shop     @relation(fields: [shopId], references: [id])
+  notes    String?
+  role     SHOP_ROLE @default(STAFF)
+  status   SHOP_STAFF_STATUS @default(ACTIVE)
+
+  @@map("shop_staffs")
+}
+
+enum SHOP_ROLE {
+  STAFF
+  OWNER
+}
+
+enum SHOP_STAFF_STATUS {
+  ACTIVE
+  REMOVED
+}
