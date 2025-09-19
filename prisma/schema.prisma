@@ -17,8 +17,8 @@ model User {
   avatar_url  String?
   bio       String?
   phone_number  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   status    USER_STATUS @default(UNVERIFIED)
   role    USER_ROLE   @default(USER)
   sessions  Session[]
@@ -43,8 +43,8 @@ model Session {
   userId    String
   hash    String   @unique
   user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("sessions")
 }
