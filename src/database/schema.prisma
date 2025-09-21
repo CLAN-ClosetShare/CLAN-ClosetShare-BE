@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   username     String?   @unique
   name      String
   email    String   @unique
@@ -39,7 +39,7 @@ enum USER_ROLE {
 }
 
 model Session {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   userId    String
   hash    String   @unique
   user      User     @relation(fields: [userId], references: [id])
@@ -56,7 +56,7 @@ enum SHOP_STATUS {
 }
 
 model Shop {
-  id       String   @id @default(cuid())
+  id       String   @id @default(uuid())
   name      String
   description String?
   address   String
@@ -74,7 +74,7 @@ model Shop {
 }
 
 model ShopStaff {
-  id       String   @id @default(cuid())
+  id       String   @id @default(uuid())
   userId    String
   shopId    String
   joined_at DateTime @default(now())

@@ -1,5 +1,8 @@
-import { defineConfig } from 'prisma/config';
+import { defineConfig, PrismaConfig } from 'prisma/config';
+import 'dotenv/config';
 
-export default defineConfig({
+const prismaConfig: PrismaConfig = {
   schema: './src/database/schema.prisma',
-});
+};
+
+export default defineConfig(prismaConfig);
