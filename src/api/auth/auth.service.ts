@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import {
   LoginReqDto,
   LoginResDto,
@@ -15,6 +15,7 @@ import { UserService } from '../user/user.service';
 import ms from 'ms';
 import crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
+import { JwtPayloadType } from './types/jwt-payload.type';
 
 export type Token = Branded<
   { access_token: string; refresh_token: string; token_expires: number },
@@ -121,5 +122,22 @@ export class AuthService {
       refresh_token,
       token_expires: tokenExpires,
     } as Token;
+  }
+
+  async verifyAccessToken(token: string): Promise<JwtPayloadType> {
+    let payload: JwtPayloadType;
+    try {
+      payload = await this.jwtService.verifyAsync<JwtPayloadType>(token, {
+        secret: this.configService.getOrThrow('auth.accessTokenSecret', {
+          infer: true,
+        }),
+      });
+    } catch {
+      throw new UnauthorizedException();
+    }
+
+    //TODO: check if session is in the blacklist
+
+    return payload;
   }
 }
