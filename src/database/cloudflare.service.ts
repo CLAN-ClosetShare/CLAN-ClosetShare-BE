@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { lookup } from 'mime-types';
 import path from 'path';
 import { AllConfigType } from 'src/config/config.type';
+import { GetUploadedUrlResDto } from './dto';
 
 @Injectable()
 export class CloudflareService {
@@ -42,7 +43,7 @@ export class CloudflareService {
     });
   }
 
-  async getUploadedUrl(fileKey: string): Promise<string> {
+  async getUploadedUrl(fileKey: string): Promise<GetUploadedUrlResDto> {
     const fileExt = path.extname(fileKey);
     const fileName =
       fileKey.replace(fileExt, '').toLowerCase().split(' ').join('-') +
@@ -60,7 +61,9 @@ export class CloudflareService {
       ContentType: contentType,
     });
 
-    return await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+    const url = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+
+    return { url, fileKey: fileName };
   }
 
   async getDownloadedUrl(fileKey: string): Promise<string> {

@@ -23,9 +23,9 @@ export class ShopService {
 
     await this.prismaService.shopStaff.create({
       data: {
-        shopId: shop.id,
+        shop_id: shop.id,
         role: 'OWNER',
-        userId: userToken.id,
+        user_id: userToken.id,
       },
     });
 
@@ -50,8 +50,8 @@ export class ShopService {
 
     const staff = await this.prismaService.shopStaff.findFirst({
       where: {
-        shopId,
-        userId: userToken.id,
+        shop_id: shopId,
+        user_id: userToken.id,
         status: 'ACTIVE',
       },
     });
@@ -74,8 +74,8 @@ export class ShopService {
 
     const staff = await this.prismaService.shopStaff.findFirst({
       where: {
-        shopId,
-        userId: userToken.id,
+        shop_id: shopId,
+        user_id: userToken.id,
         status: 'ACTIVE',
       },
     });
