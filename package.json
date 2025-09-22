@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/terminus": "^11.0.0",
+    "@payos/node": "^2.0.3",
     "@prisma/client": "6.16.1",
     "@types/mime-types": "^3.0.1",
     "argon2": "^0.44.0",
