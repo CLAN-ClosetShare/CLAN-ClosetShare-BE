@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { CreateProductReqDto } from './dto';
 import { ProductService } from './product.service';
@@ -23,8 +23,9 @@ export class ProductController {
     );
   }
 
-  // @Post('upload')
-  // async uploadProductImage(@UploadedFile() file: Express.Multer.File) {
-  //   return file;
-  // }
+  //TODO: add pagination
+  @Get(':shopId')
+  async getAllProductsByShopId(@Param('shopId') shopId: string) {
+    return await this.productService.getAllProductsByShopId(shopId);
+  }
 }
