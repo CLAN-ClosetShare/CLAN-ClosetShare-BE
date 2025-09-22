@@ -6,7 +6,7 @@ import { AuthGuard } from 'src/guards/auth.guard';
 @Controller('filter-props')
 export class FilterPropController {
   constructor(private readonly filterPropService: FilterPropService) {}
-
+  //TODO: add role based access control
   @Post('')
   @UseGuards(AuthGuard)
   async createFilterProps(

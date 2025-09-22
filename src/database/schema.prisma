@@ -109,6 +109,7 @@ model Product {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   shop     Shop     @relation(fields: [shop_id], references: [id])
+  type     PRODUCT_TYPE
   variants Variant[]
 
   @@map("products")
