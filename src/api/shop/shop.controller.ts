@@ -15,7 +15,7 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
 
-@Controller('shop')
+@Controller('shops')
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
 
