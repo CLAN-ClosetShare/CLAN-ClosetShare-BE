@@ -33,4 +33,14 @@ export class UserService {
     const { password, ...result } = user;
     return result;
   }
+
+  async getUserById(id: string): Promise<Omit<User, 'password'> | null> {
+    const user = await this.prismaService.user.findFirst({
+      where: { id },
+    });
+    if (!user) return null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return result;
+  }
 }

@@ -8,13 +8,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id          String   @id @default(uuid())
   username     String?   @unique
-  name      String
-  email    String   @unique
-  password String
-  avatar_url  String?
-  bio       String?
+  name        String
+  email       String   @unique
+  password    String
+  avatar      String?
+  bio          String?
   phone_number  String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -40,9 +40,9 @@ enum USER_ROLE {
 
 model Session {
   id        String   @id @default(uuid())
-  userId    String
+  user_id    String
   hash    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [user_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -62,25 +62,26 @@ model Shop {
   address   String
   phone_number String?
   email     String?
-  avatar_url  String?
-  background_url String?
+  avatar    String?
+  background String?
   rating   Float    @default(0)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   status   SHOP_STATUS @default(UNVERIFIED)
   staffs   ShopStaff[]
+  products Product[]
 
   @@map("shops")
 }
 
 model ShopStaff {
   id       String   @id @default(uuid())
-  userId    String
-  shopId    String
+  user_id    String
+  shop_id    String
   joined_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-  shop      Shop     @relation(fields: [shopId], references: [id])
+  user      User     @relation(fields: [user_id], references: [id])
+  shop      Shop     @relation(fields: [shop_id], references: [id])
   notes    String?
   role     SHOP_ROLE @default(STAFF)
   status   SHOP_STAFF_STATUS @default(ACTIVE)
@@ -96,4 +97,107 @@ enum SHOP_ROLE {
 enum SHOP_STAFF_STATUS {
   ACTIVE
   REMOVED
+}
+
+model Product {
+  id       String   @id @default(uuid())
+  name     String
+  description String?
+  shop_id   String
+  filter_props ProductByFilterProp[]
+  status   PRODUCT_STATUS @default(ACTIVE)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  shop     Shop     @relation(fields: [shop_id], references: [id])
+  type     PRODUCT_TYPE
+  variants Variant[]
+
+  @@map("products")
+}
+
+enum PRODUCT_TYPE {
+  SALE
+  RENT
+}
+
+model Variant {
+  id      String   @id @default(uuid())
+  product_id String
+  name     String
+  type     String
+  stock    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  product  Product  @relation(fields: [product_id], references: [id])
+  status   PRODUCT_STATUS @default(ACTIVE)
+  images String[]
+  pricings ProductPricing[]
+
+  @@map("variants")
+}
+
+model ProductPricing {
+  id       String   @id @default(uuid())
+  variant_id String
+  variant  Variant  @relation(fields: [variant_id], references: [id])
+  price    Float
+  start_date DateTime @default(now())
+  end_date DateTime?
+  status   PRODUCT_PRICING_STATUS @default(ACTIVE)
+  created_at DateTime @default(now())
+
+  @@map("product_pricings")
+}
+
+enum PRODUCT_PRICING_STATUS {
+  INACTIVE
+  ACTIVE
+}
+
+enum PRODUCT_STATUS {
+  INACTIVE
+  ACTIVE
+}
+
+model Filter {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  description String?
+  status  FILTER_STATUS @default(ACTIVE)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  props   FilterProp[]
+
+  @@map("filters")
+}
+
+model FilterProp {
+  id      String   @id @default(uuid())
+  filter_id String
+  name    String
+  description   String?
+  filter  Filter   @relation(fields: [filter_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  status  FILTER_STATUS @default(ACTIVE)
+  products ProductByFilterProp[]
+
+  @@map("filter_props")
+}
+
+model ProductByFilterProp {
+  id       String   @id @default(uuid())
+  product_id String
+  filter_prop_id String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  product   Product  @relation(fields: [product_id], references: [id])
+  filterProp FilterProp @relation(fields: [filter_prop_id], references: [id])
+
+  @@map("product_by_filter_props")
+}
+
+enum FILTER_STATUS {
+  INACTIVE
+  ACTIVE
 }

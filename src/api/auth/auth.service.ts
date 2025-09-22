@@ -16,6 +16,7 @@ import ms from 'ms';
 import crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayloadType } from './types/jwt-payload.type';
+import { USER_ROLE } from '@prisma/client';
 
 export type Token = Branded<
   { access_token: string; refresh_token: string; token_expires: number },
@@ -48,7 +49,7 @@ export class AuthService {
 
     const session = await this.prismaService.session.create({
       data: {
-        userId: user.id,
+        user_id: user.id,
         hash,
       },
     });
@@ -139,5 +140,13 @@ export class AuthService {
     //TODO: check if session is in the blacklist
 
     return payload;
+  }
+
+  async getUserRole(userId: string): Promise<string> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return USER_ROLE[user.role];
   }
 }

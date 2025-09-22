@@ -7,7 +7,7 @@ import { CreateShopReqDto, UpdateShopReqDto } from './dto';
 import CreateShopResDto from './dto/create-shop.res.dto';
 import { PrismaService } from 'src/database/prisma.service';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
-import { Shop } from '@prisma/client';
+import { Shop, SHOP_STAFF_STATUS } from '@prisma/client';
 
 @Injectable()
 export class ShopService {
@@ -23,9 +23,9 @@ export class ShopService {
 
     await this.prismaService.shopStaff.create({
       data: {
-        shopId: shop.id,
+        shop_id: shop.id,
         role: 'OWNER',
-        userId: userToken.id,
+        user_id: userToken.id,
       },
     });
 
@@ -50,8 +50,8 @@ export class ShopService {
 
     const staff = await this.prismaService.shopStaff.findFirst({
       where: {
-        shopId,
-        userId: userToken.id,
+        shop_id: shopId,
+        user_id: userToken.id,
         status: 'ACTIVE',
       },
     });
@@ -74,8 +74,8 @@ export class ShopService {
 
     const staff = await this.prismaService.shopStaff.findFirst({
       where: {
-        shopId,
-        userId: userToken.id,
+        shop_id: shopId,
+        user_id: userToken.id,
         status: 'ACTIVE',
       },
     });
@@ -88,6 +88,16 @@ export class ShopService {
       where: { id: shopId },
       data: {
         status: 'SUSPENDED',
+      },
+    });
+  }
+
+  async getStaffById(shopId: string, userId?: string) {
+    return await this.prismaService.shopStaff.findMany({
+      where: {
+        shop_id: shopId,
+        user_id: userId,
+        status: SHOP_STAFF_STATUS.ACTIVE,
       },
     });
   }
