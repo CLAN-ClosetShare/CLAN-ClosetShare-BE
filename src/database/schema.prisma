@@ -22,8 +22,26 @@ model User {
   role    USER_ROLE   @default(USER)
   sessions  Session[]
   shop_staffs ShopStaff[]
+  addresses Address[]
 
   @@map("users")
+}
+
+model Address {
+  id       String   @id @default(uuid())
+  user_id    String
+  receiver_name   String
+  phone_number     String
+  address    String
+  province_id   Int
+  district_id  Int
+  ward_id    Int
+  is_default  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user     User     @relation(fields: [user_id], references: [id])
+
+  @@map("addresses")
 }
 
 enum USER_STATUS {
@@ -132,6 +150,7 @@ model Variant {
   status   PRODUCT_STATUS @default(ACTIVE)
   images String[]
   pricings ProductPricing[]
+  orders   OrderDetail[]
 
   @@map("variants")
 }
@@ -200,4 +219,62 @@ model ProductByFilterProp {
 enum FILTER_STATUS {
   INACTIVE
   ACTIVE
+}
+
+model Order {
+  id       String   @id @default(uuid())
+  user_id    String
+  total_value   Float
+  discount_value  Float @default(0)
+  final_value   Float
+  payment_method PAYMENT_METHOD
+  type     ORDER_TYPE
+  receiver_name  String
+  phone_number   String
+  address    String
+  province_id   Int
+  district_id  Int
+  ward_id    Int
+  status   ORDER_STATUS @default(PENDING)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  order_details OrderDetail[]
+
+  @@map("orders")
+}
+
+enum PAYMENT_METHOD {
+  BANK_TRANSFER
+  COD
+}
+
+enum ORDER_TYPE {
+  SALE
+  RENT
+}
+
+enum ORDER_STATUS {
+  PENDING
+  DELIVERING
+  DELIVERED
+  CANCELED
+  RETURNED
+  SUCCESS
+}
+
+model OrderDetail {
+  id       String   @id @default(uuid())
+  order_id   String
+  variant_id String
+  quantity   Int
+  price    Float
+  discount_value Float @default(0)
+  rental_start_date DateTime?
+  rental_end_date DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  order    Order    @relation(fields: [order_id], references: [id])
+  variant  Variant  @relation(fields: [variant_id], references: [id])
+
+  @@map("order_details")
 }

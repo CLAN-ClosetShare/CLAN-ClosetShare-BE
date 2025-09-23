@@ -13,6 +13,10 @@ class CreateProductReqDto {
   @IsString()
   @IsEnum(PRODUCT_TYPE)
   type: PRODUCT_TYPE;
+
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  filter_props: string[];
 }
 
 export default CreateProductReqDto;
