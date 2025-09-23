@@ -12,6 +12,7 @@ import { CreateProductReqDto, CreateProductVariantReqDto } from './dto';
 import { ProductService } from './product.service';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
+import { PRODUCT_TYPE } from '@prisma/client';
 
 @Controller('products')
 export class ProductController {
@@ -31,10 +32,21 @@ export class ProductController {
     );
   }
 
-  //TODO: add pagination
-  @Get('/shop')
-  async getAllProductsByShopId(@Query('shopId') shopId: string) {
-    return await this.productService.getAllProductsByShopId(shopId);
+  @Get('')
+  async getAllProductsByShopId(
+    @Query('shopId') shopId: string,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('search') search: string,
+    @Query('type') type: PRODUCT_TYPE,
+  ) {
+    return await this.productService.getAllProductsByShopId({
+      shopId,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      search: search,
+      type,
+    });
   }
 
   //TODO: add uploading images

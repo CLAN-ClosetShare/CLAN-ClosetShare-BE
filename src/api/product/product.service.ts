@@ -7,6 +7,7 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { ShopService } from '../shop/shop.service';
 import { CreateProductReqDto, CreateProductVariantReqDto } from './dto';
+import { PRODUCT_STATUS, PRODUCT_TYPE } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
@@ -20,24 +21,83 @@ export class ProductService {
     shopId: string,
     createProductReqDto: CreateProductReqDto,
   ) {
+    const { filter_props, ...rest } = createProductReqDto;
+
     const isValidStaff = await this.isValidStaff(shopId, currentUser.id);
 
     if (!isValidStaff) {
       throw new UnauthorizedException();
     }
 
-    return await this.prismaService.product.create({
+    const product = await this.prismaService.product.create({
       data: {
         shop_id: shopId,
-        ...createProductReqDto,
+        ...rest,
       },
+    });
+
+    const productByFilterProps = filter_props.reduce(
+      (
+        acc: {
+          product_id: string;
+          filter_prop_id: string;
+        }[],
+        prop,
+      ) => {
+        acc.push({ product_id: product.id, filter_prop_id: prop });
+        return acc;
+      },
+      [],
+    );
+
+    await this.prismaService.productByFilterProp.createMany({
+      data: productByFilterProps,
     });
   }
 
-  async getAllProductsByShopId(shopId: string) {
-    return await this.prismaService.product.findMany({
-      where: { shop_id: shopId },
+  async getAllProductsByShopId({
+    limit = 10,
+    page = 1,
+    shopId,
+    search,
+    type,
+  }: {
+    shopId?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    type?: PRODUCT_TYPE;
+  }) {
+    const products = await this.prismaService.product.findMany({
+      where: {
+        shop_id: shopId,
+        name: { contains: search },
+        type: type ? type : undefined,
+        status: PRODUCT_STATUS.ACTIVE,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        variants: {
+          include: {
+            pricings: true,
+          },
+        },
+      },
     });
+    const total = await this.prismaService.product.count({
+      where: { shop_id: shopId, name: { contains: search }, type },
+    });
+    const total_pages = Math.ceil(total / limit);
+
+    return {
+      data: products,
+      pagination: {
+        total,
+        page,
+        total_pages,
+      },
+    };
   }
 
   async createProductVariant(
