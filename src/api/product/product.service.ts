@@ -7,7 +7,11 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { ShopService } from '../shop/shop.service';
 import { CreateProductReqDto, CreateProductVariantReqDto } from './dto';
-import { PRODUCT_STATUS, PRODUCT_TYPE } from '@prisma/client';
+import {
+  PRODUCT_PRICING_STATUS,
+  PRODUCT_STATUS,
+  PRODUCT_TYPE,
+} from '@prisma/client';
 
 @Injectable()
 export class ProductService {
@@ -151,5 +155,54 @@ export class ProductService {
     }
 
     return true;
+  }
+
+  async getOrderTotalPrice(items: { variant_id: string; quantity: string }[]) {
+    let total = 0;
+    const variants: {
+      variant_id: string;
+      quantity: number;
+      price: number;
+    }[] = [];
+    for (const item of items) {
+      const variant = await this.prismaService.variant.findFirst({
+        where: {
+          id: item.variant_id,
+          status: PRODUCT_STATUS.ACTIVE,
+          stock: {
+            gte: parseInt(item.quantity),
+          },
+        },
+
+        select: {
+          pricings: {
+            where: {
+              status: PRODUCT_PRICING_STATUS.ACTIVE,
+            },
+          },
+        },
+      });
+      if (!variant) {
+        throw new UnprocessableEntityException('Invalid variant id');
+      }
+      const newDate = new Date();
+
+      variant.pricings.find((pricing) =>
+        pricing.end_date
+          ? pricing.start_date < newDate && pricing.end_date > newDate
+          : pricing.start_date < newDate,
+      );
+
+      if (!variant.pricings.length) {
+        throw new UnprocessableEntityException('No active pricing found');
+      }
+      variants.push({
+        variant_id: item.variant_id,
+        quantity: parseInt(item.quantity),
+        price: variant.pricings[0].price,
+      });
+      total += variant.pricings[0].price * parseInt(item.quantity);
+    }
+    return { total, variants };
   }
 }

@@ -34,7 +34,6 @@ model Address {
   phone_number     String
   address    String
   province_id   Int
-  district_id  Int
   ward_id    Int
   is_default  Boolean  @default(false)
   created_at DateTime @default(now())
@@ -223,6 +222,7 @@ enum FILTER_STATUS {
 
 model Order {
   id       String   @id @default(uuid())
+  orderCode  Int    @unique @default(autoincrement())
   user_id    String
   total_value   Float
   discount_value  Float @default(0)
@@ -233,7 +233,6 @@ model Order {
   phone_number   String
   address    String
   province_id   Int
-  district_id  Int
   ward_id    Int
   status   ORDER_STATUS @default(PENDING)
   created_at DateTime @default(now())

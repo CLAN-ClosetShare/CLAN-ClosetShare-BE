@@ -6,6 +6,7 @@ import { ProductModule } from './product/product.module';
 import { FileModule } from './file/file.module';
 import { FilterModule } from './filter/filter.module';
 import { FilterPropModule } from './filterProp/filter-prop.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { FilterPropModule } from './filterProp/filter-prop.module';
     FileModule,
     FilterModule,
     FilterPropModule,
+    OrderModule,
   ],
 })
 export class ApiModule {}

@@ -28,5 +28,6 @@ import { AllConfigType } from 'src/config/config.type';
       inject: [ConfigService],
     },
   ],
+  exports: [PayosService],
 })
 export class PayosModule {}
