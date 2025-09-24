@@ -49,6 +49,11 @@ export class ProductController {
     });
   }
 
+  @Get(':productId')
+  async getProductById(@Param('productId') productId: string) {
+    return await this.productService.getProductById(productId);
+  }
+
   //TODO: add uploading images
   @Post(':productId')
   @UseGuards(AuthGuard)

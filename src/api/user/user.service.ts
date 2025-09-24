@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { verifyPassword } from 'src/utils/passwords';
@@ -38,7 +38,9 @@ export class UserService {
     const user = await this.prismaService.user.findFirst({
       where: { id },
     });
-    if (!user) return null;
+    if (!user) {
+      throw new UnprocessableEntityException('User not found');
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;

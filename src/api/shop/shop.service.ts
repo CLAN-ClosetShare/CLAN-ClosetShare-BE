@@ -32,10 +32,16 @@ export class ShopService {
     return { ...shop };
   }
 
-  async getShopById(id: string): Promise<Shop | null> {
-    return await this.prismaService.shop.findFirst({
+  async getShopById(id: string): Promise<Shop> {
+    const shop = await this.prismaService.shop.findFirst({
       where: { id },
     });
+
+    if (!shop) {
+      throw new UnprocessableEntityException();
+    }
+
+    return shop;
   }
 
   async updateShop(

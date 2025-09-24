@@ -204,5 +204,24 @@ export class ProductService {
       total += variant.pricings[0].price * parseInt(item.quantity);
     }
     return { total, variants };
+    
+  //TODO: handle discount price
+  async getProductById(productId: string) {
+    const product = await this.prismaService.product.findFirst({
+      where: { id: productId, status: PRODUCT_STATUS.ACTIVE },
+      include: {
+        variants: {
+          include: {
+            pricings: true,
+          },
+        },
+      },
+    });
+
+    if (!product) {
+      throw new UnprocessableEntityException();
+    }
+
+    return product;
   }
 }
