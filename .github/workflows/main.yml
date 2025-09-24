@@ -30,9 +30,12 @@ jobs:
           echo "R2_OBJECT_STORAGE_TOKEN_VALUE=${{ secrets.R2_OBJECT_STORAGE_TOKEN_VALUE }}" >> .env
           echo "R2_OBJECT_STORAGE_ACCESS_KEY_ID=${{ secrets.R2_OBJECT_STORAGE_ACCESS_KEY_ID }}" >> .env
           echo "R2_OBJECT_STORAGE_SECRET_ACCESS_KEY=${{ secrets.R2_OBJECT_STORAGE_SECRET_ACCESS_KEY }}" >> .env
-          echo "PAYOS_CLIENT_ID=${{ secrets.PAYOS_CLIENT_ID }}" >> .env
-          echo "PAYOS_API_KEY=${{ secrets.PAYOS_API_KEY }}" >> .env
-          echo "PAYOS_CHECKSUM_KEY=${{ secrets.PAYOS_CHECKSUM_KEY }}" >> .env
+          echo "PAYOS_PAYIN_CLIENT_ID=${{ secrets.PAYOS_PAYIN_CLIENT_ID }}" >> .env
+          echo "PAYOS_PAYIN_API_KEY=${{ secrets.PAYOS_PAYIN_API_KEY }}" >> .env
+          echo "PAYOS_PAYIN_CHECKSUM_KEY=${{ secrets.PAYOS_PAYIN_CHECKSUM_KEY }}" >> .env
+          echo "PAYOS_PAYOUT_CLIENT_ID=${{ secrets.PAYOS_PAYOUT_CLIENT_ID }}" >> .env
+          echo "PAYOS_PAYOUT_API_KEY=${{ secrets.PAYOS_PAYOUT_API_KEY }}" >> .env
+          echo "PAYOS_PAYOUT_CHECKSUM_KEY=${{ secrets.PAYOS_PAYOUT_CHECKSUM_KEY }}" >> .env
 
       - name: Run compose up container
         run: docker compose -f docker-compose.yaml up --build -d

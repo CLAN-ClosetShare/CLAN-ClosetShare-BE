@@ -1,5 +1,8 @@
 export type PayosConfig = {
-  payosClientId: string;
-  payosApiKey: string;
-  payosChecksumKey: string;
+  payosPayinClientId: string;
+  payosPayinApiKey: string;
+  payosPayinChecksumKey: string;
+  payosPayoutClientId: string;
+  payosPayoutApiKey: string;
+  payosPayoutChecksumKey: string;
 };
