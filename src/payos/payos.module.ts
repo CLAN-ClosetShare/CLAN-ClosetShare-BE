@@ -11,18 +11,38 @@ import { AllConfigType } from 'src/config/config.type';
   providers: [
     PayosService,
     {
-      provide: 'PayOS',
+      provide: 'PayinOS',
       useFactory: (configService: ConfigService<AllConfigType>) => {
         return new PayOS({
-          clientId: configService.getOrThrow('payos.payosClientId', {
+          clientId: configService.getOrThrow('payos.payosPayinClientId', {
             infer: true,
           }),
-          apiKey: configService.getOrThrow('payos.payosApiKey', {
+          apiKey: configService.getOrThrow('payos.payosPayinApiKey', {
             infer: true,
           }),
-          checksumKey: configService.getOrThrow('payos.payosChecksumKey', {
+          checksumKey: configService.getOrThrow('payos.payosPayinChecksumKey', {
             infer: true,
           }),
+        });
+      },
+      inject: [ConfigService],
+    },
+    {
+      provide: 'PayoutOS',
+      useFactory: (configService: ConfigService<AllConfigType>) => {
+        return new PayOS({
+          clientId: configService.getOrThrow('payos.payosPayoutClientId', {
+            infer: true,
+          }),
+          apiKey: configService.getOrThrow('payos.payosPayoutApiKey', {
+            infer: true,
+          }),
+          checksumKey: configService.getOrThrow(
+            'payos.payosPayoutChecksumKey',
+            {
+              infer: true,
+            },
+          ),
         });
       },
       inject: [ConfigService],

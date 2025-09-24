@@ -6,15 +6,27 @@ import validateConfig from 'src/utils/validate-config';
 class EnvironmentVariablesValidateor {
   @IsString()
   @IsNotEmpty()
-  PAYOS_CLIENT_ID: string;
+  PAYOS_PAYIN_CLIENT_ID: string;
 
   @IsString()
   @IsNotEmpty()
-  PAYOS_API_KEY: string;
+  PAYOS_PAYIN_API_KEY: string;
 
   @IsString()
   @IsNotEmpty()
-  PAYOS_CHECKSUM_KEY: string;
+  PAYOS_PAYIN_CHECKSUM_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  PAYOS_PAYOUT_CLIENT_ID: string;
+
+  @IsString()
+  @IsNotEmpty()
+  PAYOS_PAYOUT_API_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  PAYOS_PAYOUT_CHECKSUM_KEY: string;
 }
 
 export default registerAs<PayosConfig>('payos', () => {
@@ -22,8 +34,11 @@ export default registerAs<PayosConfig>('payos', () => {
   validateConfig(process.env, EnvironmentVariablesValidateor);
 
   return {
-    payosClientId: process.env.PAYOS_CLIENT_ID!,
-    payosApiKey: process.env.PAYOS_API_KEY!,
-    payosChecksumKey: process.env.PAYOS_CHECKSUM_KEY!,
+    payosPayinClientId: process.env.PAYOS_PAYIN_CLIENT_ID!,
+    payosPayinApiKey: process.env.PAYOS_PAYIN_API_KEY!,
+    payosPayinChecksumKey: process.env.PAYOS_PAYIN_CHECKSUM_KEY!,
+    payosPayoutClientId: process.env.PAYOS_PAYOUT_CLIENT_ID!,
+    payosPayoutApiKey: process.env.PAYOS_PAYOUT_API_KEY!,
+    payosPayoutChecksumKey: process.env.PAYOS_PAYOUT_CHECKSUM_KEY!,
   };
 });

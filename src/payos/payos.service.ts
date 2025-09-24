@@ -11,20 +11,21 @@ import {
 export class PayosService {
   constructor(
     // private readonly prismaService: PrismaService,
-    @Inject('PayOS') private readonly payos: PayOS,
+    @Inject('PayinOS') private readonly payinOS: PayOS,
+    @Inject('PayoutOS') private readonly payoutOS: PayOS,
   ) {}
 
   async createPaymentUrl(
     body: CreatePaymentLinkRequest,
   ): Promise<CreatePaymentLinkResponse> {
-    return await this.payos.paymentRequests.create(body);
+    return await this.payinOS.paymentRequests.create(body);
   }
 
   async getPaymentLinkInformation(orderId: string): Promise<PaymentLink> {
-    return await this.payos.paymentRequests.get(orderId);
+    return await this.payinOS.paymentRequests.get(orderId);
   }
 
   async cancelPaymentLink(orderId: string): Promise<PaymentLink> {
-    return await this.payos.paymentRequests.cancel(orderId);
+    return await this.payoutOS.paymentRequests.cancel(orderId);
   }
 }
