@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { PayosController } from './payos.controller';
 import { PayosService } from './payos.service';
-import { PayOS } from '@payos/node';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AllConfigType } from 'src/config/config.type';
+import { PayOS } from '@payos/node';
 
 @Module({
   imports: [ConfigModule],

@@ -4,8 +4,8 @@ import {
   CreatePaymentLinkResponse,
   PaymentLink,
   PayOS,
+  PayoutAccountInfo,
 } from '@payos/node';
-// import { PrismaService } from 'src/database/prisma.service';
 
 @Injectable()
 export class PayosService {
@@ -26,6 +26,10 @@ export class PayosService {
   }
 
   async cancelPaymentLink(orderId: string): Promise<PaymentLink> {
-    return await this.payoutOS.paymentRequests.cancel(orderId);
+    return await this.payinOS.paymentRequests.cancel(orderId);
+  }
+
+  async getBalance(): Promise<PayoutAccountInfo> {
+    return await this.payoutOS.payoutsAccount.balance();
   }
 }
