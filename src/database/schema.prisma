@@ -23,8 +23,13 @@ model User {
   sessions  Session[]
   shop_staffs ShopStaff[]
   addresses Address[]
+  subscription_plan_id String?
+  subscription_plan   SubscriptionPlan? @relation(fields: [subscription_plan_id], references: [id])
+  subscription_plan_start_date DateTime?
+  subscription_plan_end_date DateTime?
 
   @@map("users")
+  SubscriptionPlan SubscriptionPlan[] @relation("UserSubscriptionPlan")
 }
 
 model Address {
@@ -222,7 +227,7 @@ enum FILTER_STATUS {
 
 model Order {
   id       String   @id @default(uuid())
-  orderCode  Int    @unique @default(autoincrement())
+  order_code  Int    @unique
   user_id    String
   total_value   Float
   discount_value  Float @default(0)
@@ -238,6 +243,7 @@ model Order {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   order_details OrderDetail[]
+  transactions  Transaction[]
 
   @@map("orders")
 }
@@ -276,4 +282,79 @@ model OrderDetail {
   variant  Variant  @relation(fields: [variant_id], references: [id])
 
   @@map("order_details")
+}
+
+model SubscriptionPlan {
+  id      String   @id @default(uuid())
+  name     String
+  description String?
+  price    Float
+  duration_days Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  status   SUBSCRIPTION_PLAN_STATUS @default(ACTIVE)
+  users    User[]  @relation("UserSubscriptionPlan")
+
+  @@map("subscription_plans")
+  User User[]
+}
+
+model SubscriptionOrder {
+  id       String   @id @default(uuid())
+  subscription_plan_id String
+  user_id    String
+  price   Float
+  payment_method PAYMENT_METHOD @default(BANK_TRANSFER)
+  status  SUBSCRIPTION_ORDER_STATUS @default(PENDING)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  transactions  Transaction[]
+  order_code Int  @unique
+
+  @@map("subscription_orders")
+}
+
+model Transaction {
+  id       String   @id @default(uuid())
+  ammount   Float
+  description String?
+  type   TRANSACTION_TYPE
+  created_at DateTime @default(now())
+  order_id   String?
+  status   TRANSACTION_STATUS
+  subscription_order_id String?
+  subscription_order SubscriptionOrder? @relation(fields: [subscription_order_id], references: [id])
+  order   Order?   @relation(fields: [order_id], references: [id])
+}
+
+enum TRANSACTION_STATUS {
+  PENDING
+  CANCELLED
+  UNDERPAID
+  PAID
+  EXPIRED
+  PROCESSING 
+  FAILED
+}
+
+enum TRANSACTION_TYPE {
+  PAYIN
+  PAYOUT
+}
+
+enum SUBSCRIPTION_ORDER_STATUS {
+  PENDING
+  PAID
+  CANCELED
+}
+
+enum SUBSCRIPTION_PLAN_STATUS {
+  INACTIVE
+  ACTIVE
+}
+
+enum USER_SUBSCRIPTION_STATUS {
+  ACTIVE
+  EXPIRED
+  CANCELED
 }

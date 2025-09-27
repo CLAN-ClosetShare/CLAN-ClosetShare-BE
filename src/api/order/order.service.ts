@@ -19,6 +19,11 @@ export class OrderService {
     createOrderReqDto: CreateOrderReqDto,
   ) {
     const { type, item, ...rest } = createOrderReqDto;
+    const orderCodeSequence = await this.prismaService.$queryRawUnsafe<
+      { nextval: number }[]
+    >(`SELECT nextval('shared_order_code_seq')`);
+
+    const orderCode = Number(orderCodeSequence[0].nextval);
 
     //TODO: handle rent order
     if (type === ORDER_TYPE.RENT) {
@@ -32,6 +37,7 @@ export class OrderService {
           total_value: total,
           final_value: total,
           type: ORDER_TYPE.SALE,
+          order_code: orderCode,
         },
       });
 
@@ -61,7 +67,7 @@ export class OrderService {
       });
 
       const paymentUrl = await this.payosService.createPaymentUrl({
-        orderCode: order.orderCode,
+        orderCode: order.order_code,
         amount: total,
         description: `123123123`,
         cancelUrl: 'http://localhost:3000/order/cancel',
