@@ -8,6 +8,7 @@ import { FilterModule } from './filter/filter.module';
 import { FilterPropModule } from './filterProp/filter-prop.module';
 import { PlatformModule } from './platform/platform.module';
 import { OrderModule } from './order/order.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { OrderModule } from './order/order.module';
     FilterPropModule,
     PlatformModule,
     OrderModule,
+    SubscriptionModule,
   ],
 })
 export class ApiModule {}
