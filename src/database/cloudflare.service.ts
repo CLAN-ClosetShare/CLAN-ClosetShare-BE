@@ -66,6 +66,37 @@ export class CloudflareService {
     return { url, fileKey: fileName };
   }
 
+  async uploadFile(file: Express.Multer.File): Promise<string> {
+    const fileExt = path.extname(file.originalname);
+    const fileName =
+      file.originalname
+        .replace(fileExt, '')
+        .toLowerCase()
+        .split(' ')
+        .join('-') +
+      '-' +
+      Date.now() +
+      fileExt;
+
+    const contentType = file.mimetype || 'application/octet-stream';
+
+    const command = new PutObjectCommand({
+      Bucket: this.configService.getOrThrow(
+        'database.r2ObjectStorageBucketName',
+        {
+          infer: true,
+        },
+      ),
+      Key: fileName,
+      Body: file.buffer,
+      ContentType: contentType,
+    });
+
+    await this.s3.send(command);
+
+    return fileName;
+  }
+
   async getDownloadedUrl(fileKey: string): Promise<string> {
     const command = new GetObjectCommand({
       Bucket: this.configService.getOrThrow(
