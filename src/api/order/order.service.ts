@@ -2,7 +2,12 @@ import { JwtPayloadType } from './../auth/types/jwt-payload.type';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import CreateOrderReqDto from './dto/create-order.req.dto';
-import { ORDER_TYPE } from '@prisma/client';
+import {
+  ORDER_STATUS,
+  ORDER_TYPE,
+  TRANSACTION_STATUS,
+  TRANSACTION_TYPE,
+} from '@prisma/client';
 import { ProductService } from '../product/product.service';
 import { PayosService } from 'src/payos/payos.service';
 
@@ -66,12 +71,25 @@ export class OrderService {
         data: orderDetailItems,
       });
 
+      await Promise.all(
+        orderDetailItems.map(async (item) => {
+          await this.prismaService.variant.update({
+            where: { id: item.variant_id },
+            data: {
+              stock: {
+                decrement: item.quantity,
+              },
+            },
+          });
+        }),
+      );
+
       const paymentUrl = await this.payosService.createPaymentUrl({
         orderCode: order.order_code,
         amount: total,
-        description: `123123123`,
-        cancelUrl: 'http://localhost:3000/order/cancel',
-        returnUrl: 'http://localhost:3000/order/success',
+        description: order.order_code.toString(),
+        cancelUrl: 'http://localhost:3000/orders/result',
+        returnUrl: 'http://localhost:3000/orders/result',
         items: orderDetailItems.map((item) => ({
           name: `Variant ${item.variant_id}`,
           quantity: item.quantity,
@@ -84,5 +102,76 @@ export class OrderService {
         paymentUrl,
       };
     }
+  }
+
+  async handleOrderResult({
+    orderCode,
+    status,
+    cancel,
+  }: {
+    orderCode: number;
+    id: string;
+    status: 'PAID' | 'CANCELLED';
+    cancel: boolean;
+  }) {
+    let orderResult;
+    if (status == 'PAID') {
+      orderResult = await this.prismaService.order.update({
+        where: {
+          order_code: orderCode,
+        },
+        data: {
+          status: ORDER_STATUS.DELIVERING,
+        },
+      });
+
+      await this.prismaService.transaction.create({
+        data: {
+          order_id: orderResult.id,
+          status: TRANSACTION_STATUS.PAID,
+          ammount: orderResult.final_value,
+          type: TRANSACTION_TYPE.PAYIN,
+        },
+      });
+    } else if (status == 'CANCELLED' || cancel) {
+      orderResult = await this.prismaService.order.update({
+        where: {
+          order_code: orderCode,
+        },
+        data: {
+          status: ORDER_STATUS.CANCELED,
+        },
+      });
+
+      const orderDetails = await this.prismaService.orderDetail.findMany({
+        where: {
+          order_id: orderResult.id,
+        },
+      });
+
+      await Promise.all(
+        orderDetails.map(async (item) => {
+          await this.prismaService.variant.update({
+            where: { id: item.variant_id },
+            data: {
+              stock: {
+                increment: item.quantity,
+              },
+            },
+          });
+        }),
+      );
+
+      await this.prismaService.transaction.create({
+        data: {
+          order_id: orderResult.id,
+          status: TRANSACTION_STATUS.CANCELLED,
+          ammount: orderResult.final_value,
+          type: TRANSACTION_TYPE.PAYIN,
+        },
+      });
+    }
+
+    return orderResult;
   }
 }
