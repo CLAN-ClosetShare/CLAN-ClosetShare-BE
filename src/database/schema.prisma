@@ -27,6 +27,9 @@ model User {
   subscription_plan   SubscriptionPlan? @relation(fields: [subscription_plan_id], references: [id])
   subscription_plan_start_date DateTime?
   subscription_plan_end_date DateTime?
+  posts Post[]
+  reacts React[]
+  comments Comment[]
 
   @@map("users")
   SubscriptionPlan SubscriptionPlan[] @relation("UserSubscriptionPlan")
@@ -325,6 +328,8 @@ model Transaction {
   subscription_order_id String?
   subscription_order SubscriptionOrder? @relation(fields: [subscription_order_id], references: [id])
   order   Order?   @relation(fields: [order_id], references: [id])
+
+  @@map("transactions")
 }
 
 enum TRANSACTION_STATUS {
@@ -357,4 +362,48 @@ enum USER_SUBSCRIPTION_STATUS {
   ACTIVE
   EXPIRED
   CANCELED
+}
+
+model Post {
+  id       String   @id @default(uuid())
+  title    String
+  content  String
+  author_id String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  author   User     @relation(fields: [author_id], references: [id])
+  published Boolean  @default(false)
+  reacts   React[]
+  comments Comment[]
+
+  @@map("posts")
+}
+
+model React {
+  id       String   @id @default(uuid())
+  user_id    String
+  post_id    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  is_active Boolean  @default(true)
+  user     User     @relation(fields: [user_id], references: [id])
+  post     Post     @relation(fields: [post_id], references: [id])
+
+  @@map("reacts")
+}
+
+model Comment {
+  id       String   @id @default(uuid())
+  user_id    String
+  post_id    String
+  content  String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  quote_comment_id String?
+  user     User     @relation(fields: [user_id], references: [id])
+  post     Post     @relation(fields: [post_id], references: [id])
+  quote_comment Comment? @relation("CommentQuote", fields: [quote_comment_id], references: [id])
+  replies  Comment[] @relation("CommentQuote")
+
+  @@map("comments")
 }

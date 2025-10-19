@@ -9,6 +9,7 @@ import { FilterPropModule } from './filterProp/filter-prop.module';
 import { PlatformModule } from './platform/platform.module';
 import { OrderModule } from './order/order.module';
 import { SubscriptionModule } from './subscription/subscription.module';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
     FilterModule,
     FilterPropModule,
     PlatformModule,
+    PostModule,
     OrderModule,
     SubscriptionModule,
   ],
