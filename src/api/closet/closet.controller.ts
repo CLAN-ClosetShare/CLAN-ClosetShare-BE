@@ -2,9 +2,11 @@ import { ClosetService } from './closet.service';
 import {
   Body,
   Controller,
+  Get,
   Param,
   Post,
   Put,
+  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -15,6 +17,7 @@ import { JwtPayloadType } from '../auth/types/jwt-payload.type';
 import AddNewClosetItemReqDto from './dto/add-new-closet-item.req.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import UpdateClosetItemReqDto from './dto/update-closet-item.req.dto';
+import { CLOSET_ITEM_TYPE } from '@prisma/client';
 
 @Controller('closets')
 export class ClosetController {
@@ -50,5 +53,23 @@ export class ClosetController {
       image,
       updateClosetItemReqDto,
     );
+  }
+
+  @Get('')
+  @UseGuards(AuthGuard)
+  async getClosetItemsByUserId(
+    @CurrentUser() currentUser: JwtPayloadType,
+    @Query('userId') userId: string,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('type') type: CLOSET_ITEM_TYPE,
+  ) {
+    return await this.closetService.getClosetItemsByUserId({
+      currentUser,
+      userId,
+      page: page ? Number.parseInt(page) : undefined,
+      limit: limit ? Number.parseInt(limit) : undefined,
+      type,
+    });
   }
 }

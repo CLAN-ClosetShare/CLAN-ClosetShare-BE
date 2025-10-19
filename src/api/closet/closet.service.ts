@@ -4,6 +4,7 @@ import { JwtPayloadType } from '../auth/types/jwt-payload.type';
 import AddNewClosetItemReqDto from './dto/add-new-closet-item.req.dto';
 import { CloudflareService } from 'src/database/cloudflare.service';
 import UpdateClosetItemReqDto from './dto/update-closet-item.req.dto';
+import { CLOSET_ITEM_TYPE } from '@prisma/client';
 
 @Injectable()
 export class ClosetService {
@@ -60,5 +61,52 @@ export class ClosetService {
         },
       });
     }
+  }
+
+  async getClosetItemsByUserId({
+    currentUser,
+    limit = 10,
+    page = 1,
+    type,
+    userId,
+  }: {
+    currentUser?: JwtPayloadType;
+    userId?: string;
+    page?: number;
+    limit?: number;
+    type?: CLOSET_ITEM_TYPE;
+  }) {
+    const closetItems = await this.prismaService.closetItem.findMany({
+      where: {
+        user_id: userId || currentUser?.id,
+        type: type || undefined,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    for (const closetItem of closetItems) {
+      const signedUrl = await this.cloudflareService.getDownloadedUrl(
+        closetItem.image,
+      );
+      closetItem.image = signedUrl;
+    }
+
+    const total = await this.prismaService.closetItem.count({
+      where: {
+        user_id: userId || currentUser?.id,
+        type: type || undefined,
+      },
+    });
+    const total_pages = Math.ceil(total / limit);
+
+    return {
+      data: closetItems,
+      pagination: {
+        total,
+        page,
+        total_pages,
+      },
+    };
   }
 }
