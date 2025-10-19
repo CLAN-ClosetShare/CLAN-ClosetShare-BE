@@ -1,5 +1,9 @@
 import { PrismaService } from 'src/database/prisma.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
 import AddNewClosetItemReqDto from './dto/add-new-closet-item.req.dto';
 import { CloudflareService } from 'src/database/cloudflare.service';
@@ -108,5 +112,31 @@ export class ClosetService {
         total_pages,
       },
     };
+  }
+
+  async deleteClosetItem(closetItemId: string, currentUser: JwtPayloadType) {
+    const closetItem = await this.prismaService.closetItem.findFirst({
+      where: {
+        id: closetItemId,
+      },
+    });
+
+    if (!closetItem) {
+      throw new NotFoundException('ClosetItem not found');
+    }
+
+    if (closetItem.user_id !== currentUser.id) {
+      throw new UnauthorizedException(
+        "You don't have permission to delete this ClosetItem",
+      );
+    }
+
+    //TODO: if outfit contains this closet item => block delete
+
+    return await this.prismaService.closetItem.delete({
+      where: {
+        id: closetItemId,
+      },
+    });
   }
 }

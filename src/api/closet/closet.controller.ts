@@ -2,6 +2,7 @@ import { ClosetService } from './closet.service';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -71,5 +72,14 @@ export class ClosetController {
       limit: limit ? Number.parseInt(limit) : undefined,
       type,
     });
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard)
+  async deleteClosetItem(
+    @Param('id') closetItemId: string,
+    @CurrentUser() currentUser: JwtPayloadType,
+  ) {
+    return await this.closetService.deleteClosetItem(closetItemId, currentUser);
   }
 }
