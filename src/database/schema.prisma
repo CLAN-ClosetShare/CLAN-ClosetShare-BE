@@ -30,6 +30,8 @@ model User {
   posts Post[]
   reacts React[]
   comments Comment[]
+  closet_items   ClosetItem[]
+  outfits     Outfit[]
 
   @@map("users")
   SubscriptionPlan SubscriptionPlan[] @relation("UserSubscriptionPlan")
@@ -406,4 +408,41 @@ model Comment {
   replies  Comment[] @relation("CommentQuote")
 
   @@map("comments")
+}
+
+enum CLOSET_ITEM_TYPE {
+  TOPS
+  OUTWEAR
+  BOTTOMS
+  ACCESSORIES
+}
+
+model ClosetItem {
+  id      String      @id @default(uuid())
+  user_id     String
+  name     String
+  type    CLOSET_ITEM_TYPE
+  image     String
+  user      User    @relation(fields: [user_id], references: [id])
+  outfitsAsTop       Outfit[] @relation("OutfitTop")
+  outfitsAsOutwear   Outfit[] @relation("OutfitOutwear")
+  outfitsAsBottom    Outfit[] @relation("OutfitBottom")
+  outfitsAsAccessory Outfit[] @relation("OutfitAccessories")
+
+  @@map("closet_items")
+}
+
+model Outfit {
+  id    String      @id @default(uuid())
+  user_id     String
+  user      User    @relation(fields: [user_id], references: [id])
+  top_id String?
+  top    ClosetItem? @relation("OutfitTop", fields: [top_id], references: [id])
+  outwear_id String?
+  outwear    ClosetItem? @relation("OutfitOutwear", fields: [outwear_id], references: [id])
+  bottom_id String?
+  bottom    ClosetItem? @relation("OutfitBottom", fields: [bottom_id], references: [id])
+  accessories ClosetItem[] @relation("OutfitAccessories")
+
+  @@map("outfits")
 }
