@@ -78,7 +78,7 @@ export class ProductService {
       where: {
         shop_id: shopId,
         name: { contains: search },
-        type: type ? type : undefined,
+        type: type || undefined,
         status: PRODUCT_STATUS.ACTIVE,
       },
       skip: (page - 1) * limit,

@@ -58,7 +58,6 @@ export class ProductController {
     return await this.productService.getProductById(productId);
   }
 
-  //TODO: add uploading images
   @Post(':productId')
   @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('images')) // Accept multiple files under the 'images' field

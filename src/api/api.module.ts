@@ -10,16 +10,20 @@ import { PlatformModule } from './platform/platform.module';
 import { OrderModule } from './order/order.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { PostModule } from './post/post.module';
+import { ClosetModule } from './closet/closet.module';
+import { OutfitModule } from './outfit/outfit.module';
 
 @Module({
   imports: [
     AuthModule,
+    ClosetModule,
     UserModule,
     ShopModule,
     ProductModule,
     FileModule,
     FilterModule,
     FilterPropModule,
+    OutfitModule,
     PlatformModule,
     PostModule,
     OrderModule,
