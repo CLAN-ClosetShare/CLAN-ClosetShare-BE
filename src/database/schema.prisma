@@ -435,6 +435,7 @@ model ClosetItem {
 model Outfit {
   id    String      @id @default(uuid())
   user_id     String
+  name    String
   user      User    @relation(fields: [user_id], references: [id])
   top_id String?
   top    ClosetItem? @relation("OutfitTop", fields: [top_id], references: [id])

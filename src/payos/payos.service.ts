@@ -4,7 +4,9 @@ import {
   CreatePaymentLinkResponse,
   PaymentLink,
   PayOS,
+  Payout,
   PayoutAccountInfo,
+  PayoutRequest,
 } from '@payos/node';
 
 @Injectable()
@@ -31,5 +33,11 @@ export class PayosService {
 
   async getBalance(): Promise<PayoutAccountInfo> {
     return await this.payoutOS.payoutsAccount.balance();
+  }
+
+  async createPayout(payoutData: PayoutRequest): Promise<Payout> {
+    return await this.payoutOS.payouts.create({
+      ...payoutData,
+    });
   }
 }
