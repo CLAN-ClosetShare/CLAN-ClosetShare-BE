@@ -3,9 +3,8 @@ import { ClosetController } from './closet.controller';
 import { ClosetService } from './closet.service';
 
 @Module({
-  imports: [],
   controllers: [ClosetController],
   providers: [ClosetService],
-  exports: [],
+  exports: [ClosetService],
 })
 export class ClosetModule {}

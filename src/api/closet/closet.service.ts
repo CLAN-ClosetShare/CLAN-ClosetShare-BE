@@ -139,4 +139,12 @@ export class ClosetService {
       },
     });
   }
+
+  async getItemById(id: string) {
+    return await this.prismaService.closetItem.findFirst({
+      where: {
+        id,
+      },
+    });
+  }
 }
