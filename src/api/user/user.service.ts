@@ -19,7 +19,7 @@ export class UserService {
   }: {
     email: string;
     hashedPassword: string;
-  }): Promise<Omit<User, 'password'> | null> {
+  }): Promise<(Omit<User, 'password'> & { shopCreated: boolean }) | null> {
     const user = await this.prismaService.user.findFirst({
       where: { email },
     });
@@ -30,8 +30,19 @@ export class UserService {
     });
     if (!isPasswordValid) return null;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const shop = await this.prismaService.shopStaff.findFirst({
+      where: {
+        user_id: user.id,
+        status: 'ACTIVE',
+        role: 'OWNER',
+      },
+    });
+
+    const shopCreated = !!shop;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
-    return result;
+    return { ...result, shopCreated };
   }
 
   async getUserById(id: string): Promise<Omit<User, 'password'> | null> {
