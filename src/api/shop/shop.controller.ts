@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ShopService } from './shop.service';
@@ -31,6 +32,19 @@ export class ShopController {
   @Get(':id')
   async getShopById(@Param('id') id: string) {
     return await this.shopService.getShopById(id);
+  }
+
+  @Get('')
+  async getShops(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('search') search: string,
+  ) {
+    return await this.shopService.getShops({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      search,
+    });
   }
 
   @Patch(':id')
