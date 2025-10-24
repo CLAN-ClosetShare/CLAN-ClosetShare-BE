@@ -44,6 +44,41 @@ export class ShopService {
     return shop;
   }
 
+  async getShops({
+    limit = 10,
+    page = 1,
+    search,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) {
+    const shops = await this.prismaService.shop.findMany({
+      where: {
+        name: { contains: search },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const total = await this.prismaService.shop.count({
+      where: {
+        name: { contains: search },
+      },
+    });
+
+    const total_pages = Math.ceil(total / limit);
+
+    return {
+      data: shops,
+      pagination: {
+        total,
+        page,
+        total_pages,
+      },
+    };
+  }
+
   async updateShop(
     shopId: string,
     userToken: JwtPayloadType,
