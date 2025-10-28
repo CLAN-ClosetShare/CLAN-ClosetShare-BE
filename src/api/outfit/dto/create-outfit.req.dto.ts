@@ -1,9 +1,25 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 class CreateOutfitReqDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  name: string;
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  style?: string;
+
+  @IsOptional()
+  @IsString()
+  occasion?: string;
+
+  @IsOptional()
+  @IsString()
+  season?: string;
+
+  @IsOptional()
+  @IsString()
+  color_theme?: string;
 }
 
 export default CreateOutfitReqDto;

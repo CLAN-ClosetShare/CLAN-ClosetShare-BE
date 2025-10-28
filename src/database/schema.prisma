@@ -423,6 +423,11 @@ model ClosetItem {
   name     String
   type    CLOSET_ITEM_TYPE
   image     String
+  color_palette String?
+  material String?
+  style_tag String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   user      User    @relation(fields: [user_id], references: [id])
   outfitsAsTop       Outfit[] @relation("OutfitTop")
   outfitsAsOutwear   Outfit[] @relation("OutfitOutwear")
@@ -435,7 +440,13 @@ model ClosetItem {
 model Outfit {
   id    String      @id @default(uuid())
   user_id     String
-  name    String
+  name    String?
+  style   String?
+  occasion String?
+  season  String?
+  color_theme String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   user      User    @relation(fields: [user_id], references: [id])
   top_id String?
   top    ClosetItem? @relation("OutfitTop", fields: [top_id], references: [id])
