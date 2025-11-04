@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -13,10 +14,14 @@ import { CreatePostReqDto, UpdatePostReqDto } from './dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
+import { ReactService } from '../react/react.service';
 
 @Controller('posts')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    private readonly reactService: ReactService,
+  ) {}
 
   @Post('')
   @UseGuards(AuthGuard)
@@ -52,5 +57,23 @@ export class PostController {
       updatePostReqDto,
       currentUser,
     );
+  }
+
+  @Post(':id/reacts')
+  @UseGuards(AuthGuard)
+  async reactPost(
+    @Param('id') postId: string,
+    @CurrentUser() currentUser: JwtPayloadType,
+  ) {
+    return await this.reactService.reactPost({ post_id: postId }, currentUser);
+  }
+
+  @Delete(':id/reacts')
+  @UseGuards(AuthGuard)
+  async unReactPost(
+    @Param('id') postId: string,
+    @CurrentUser() currentUser: JwtPayloadType,
+  ) {
+    return await this.reactService.unReactPost(postId, currentUser);
   }
 }

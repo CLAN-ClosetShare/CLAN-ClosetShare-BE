@@ -402,6 +402,7 @@ model Comment {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   quote_comment_id String?
+  is_deleted Boolean  @default(false)
   user     User     @relation(fields: [user_id], references: [id])
   post     Post     @relation(fields: [post_id], references: [id])
   quote_comment Comment? @relation("CommentQuote", fields: [quote_comment_id], references: [id])

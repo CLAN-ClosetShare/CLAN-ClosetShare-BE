@@ -12,6 +12,8 @@ import { SubscriptionModule } from './subscription/subscription.module';
 import { PostModule } from './post/post.module';
 import { ClosetModule } from './closet/closet.module';
 import { OutfitModule } from './outfit/outfit.module';
+import { ReactModule } from './react/react.module';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { OutfitModule } from './outfit/outfit.module';
     PostModule,
     OrderModule,
     SubscriptionModule,
+    ReactModule,
+    CommentModule,
   ],
 })
 export class ApiModule {}
