@@ -31,18 +31,33 @@ export class PostService {
     });
   }
 
-  async getAllPosts(page: string, limit: string) {
+  async getAllPosts(page: string, limit: string, userId?: string) {
     const pageNumber = parseInt(page) || 1;
     const limitNumber = parseInt(limit) || 10;
     const skip = (pageNumber - 1) * limitNumber;
 
+    const whereCondition = userId ? { author_id: userId } : {};
+
     const [posts, total] = await Promise.all([
       this.prismaService.post.findMany({
+        where: whereCondition,
         skip,
         take: limitNumber,
         orderBy: { created_at: 'desc' },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            },
+          },
+        },
       }),
-      this.prismaService.post.count(),
+      this.prismaService.post.count({
+        where: whereCondition,
+      }),
     ]);
 
     return { posts, total };
