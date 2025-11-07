@@ -44,6 +44,15 @@ export class OutfitController {
     );
   }
 
+  @Get('public')
+  async getAllOutfits(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('user_id') userId: string,
+  ) {
+    return await this.outfitService.getAllOutfits(page, limit, userId);
+  }
+
   @Get(':id')
   async getOutfit(@Param('id') outfitId: string) {
     return await this.outfitService.getOutfit(outfitId);

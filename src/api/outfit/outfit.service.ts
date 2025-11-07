@@ -147,6 +147,46 @@ export class OutfitService {
     return await this.processOutfit(outfit);
   }
 
+  async getAllOutfits(page: string, limit: string, userId?: string) {
+    const pageNumber = parseInt(page) || 1;
+    const limitNumber = parseInt(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const whereCondition = userId ? { user_id: userId } : {};
+
+    const [outfits, total] = await Promise.all([
+      this.prismaService.outfit.findMany({
+        where: whereCondition,
+        skip,
+        take: limitNumber,
+        orderBy: { created_at: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            },
+          },
+          top: true,
+          bottom: true,
+          outwear: true,
+          accessories: true,
+        },
+      }),
+      this.prismaService.outfit.count({
+        where: whereCondition,
+      }),
+    ]);
+
+    const processedOutfits = await Promise.all(
+      outfits.map((outfit) => this.processOutfit(outfit)),
+    );
+
+    return { outfits: processedOutfits, total };
+  }
+
   async getOutfitsByUserId(currentUser: JwtPayloadType, userId: string) {
     const outfits = await this.prismaService.outfit.findMany({
       where: {
