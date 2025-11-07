@@ -41,8 +41,9 @@ export class PostController {
   async getAllPosts(
     @Query('page') page: string,
     @Query('limit') limit: string,
+    @Query('user_id') userId: string,
   ) {
-    return await this.postService.getAllPosts(page, limit);
+    return await this.postService.getAllPosts(page, limit, userId);
   }
 
   @Put(':id')
