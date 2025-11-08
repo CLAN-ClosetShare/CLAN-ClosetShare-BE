@@ -181,7 +181,16 @@ export class OutfitService {
     ]);
 
     const processedOutfits = await Promise.all(
-      outfits.map((outfit) => this.processOutfit(outfit)),
+      outfits.map(async (outfit) => {
+        const processed = await this.processOutfit(outfit);
+        // Transform user avatar
+        if (processed.user?.avatar) {
+          processed.user.avatar = await this.cloudflareService.getDownloadedUrl(
+            processed.user.avatar,
+          );
+        }
+        return processed;
+      }),
     );
 
     return { outfits: processedOutfits, total };

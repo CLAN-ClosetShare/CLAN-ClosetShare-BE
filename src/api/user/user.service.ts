@@ -2,10 +2,14 @@ import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma, User, USER_ROLE } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { verifyPassword } from 'src/utils/passwords';
+import { CloudflareService } from 'src/database/cloudflare.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly cloudflareService: CloudflareService,
+  ) {}
 
   async createUser(user: Prisma.UserCreateInput): Promise<User> {
     return await this.prismaService.user.create({
@@ -42,6 +46,14 @@ export class UserService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
+
+    // Transform avatar key to URL if exists
+    if (result.avatar) {
+      result.avatar = await this.cloudflareService.getDownloadedUrl(
+        result.avatar,
+      );
+    }
+
     return { ...result, shopCreated };
   }
 
@@ -54,6 +66,14 @@ export class UserService {
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
+
+    // Transform avatar key to URL if exists
+    if (result.avatar) {
+      result.avatar = await this.cloudflareService.getDownloadedUrl(
+        result.avatar,
+      );
+    }
+
     return result;
   }
 
@@ -136,6 +156,11 @@ export class UserService {
 
     if (!user) {
       throw new UnprocessableEntityException('User not found');
+    }
+
+    // Transform avatar key to URL if exists
+    if (user.avatar) {
+      user.avatar = await this.cloudflareService.getDownloadedUrl(user.avatar);
     }
 
     return user;
@@ -274,13 +299,64 @@ export class UserService {
 
     const total_pages = Math.ceil(total / limitNumber);
 
+    // Transform avatar keys to URLs for all users
+    const usersWithAvatarUrls = await Promise.all(
+      users.map(async (user) => {
+        if (user.avatar) {
+          user.avatar = await this.cloudflareService.getDownloadedUrl(
+            user.avatar,
+          );
+        }
+        return user;
+      }),
+    );
+
     return {
-      data: users,
+      data: usersWithAvatarUrls,
       pagination: {
         total,
         page: pageNumber,
         total_pages,
       },
     };
+  }
+
+  async updateUser(
+    userId: string,
+    updateData: {
+      name?: string;
+      bio?: string;
+      phone_number?: string;
+      avatar?: string;
+    },
+  ): Promise<Omit<User, 'password'>> {
+    const user = await this.prismaService.user.findFirst({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnprocessableEntityException('User not found');
+    }
+
+    const updatedUser = await this.prismaService.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = updatedUser;
+
+    // Transform avatar key to URL if exists
+    if (result.avatar) {
+      result.avatar = await this.cloudflareService.getDownloadedUrl(
+        result.avatar,
+      );
+    }
+
+    return result;
+  }
+
+  async uploadAvatar(file: Express.Multer.File): Promise<string> {
+    return await this.cloudflareService.uploadFile(file);
   }
 }
