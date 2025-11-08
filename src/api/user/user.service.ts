@@ -1,5 +1,5 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User, USER_ROLE } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { verifyPassword } from 'src/utils/passwords';
 
@@ -55,5 +55,232 @@ export class UserService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;
+  }
+
+  async getUserByIdWithOutfits(id: string): Promise<any> {
+    const user = await this.prismaService.user.findFirst({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        email: true,
+        avatar: true,
+        bio: true,
+        phone_number: true,
+        created_at: true,
+        updated_at: true,
+        status: true,
+        role: true,
+        subscription_plan_id: true,
+        subscription_plan_start_date: true,
+        subscription_plan_end_date: true,
+        outfits: {
+          select: {
+            id: true,
+            name: true,
+            style: true,
+            occasion: true,
+            season: true,
+            color_theme: true,
+            created_at: true,
+            updated_at: true,
+            top: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                image: true,
+                color_palette: true,
+                material: true,
+                style_tag: true,
+              },
+            },
+            bottom: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                image: true,
+                color_palette: true,
+                material: true,
+                style_tag: true,
+              },
+            },
+            outwear: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                image: true,
+                color_palette: true,
+                material: true,
+                style_tag: true,
+              },
+            },
+            accessories: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                image: true,
+                color_palette: true,
+                material: true,
+                style_tag: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnprocessableEntityException('User not found');
+    }
+
+    return user;
+  }
+
+  async isAdmin(userId: string): Promise<boolean> {
+    const user = await this.prismaService.user.findFirst({
+      where: { id: userId },
+      select: { role: true },
+    });
+    return user?.role === USER_ROLE.ADMIN;
+  }
+
+  async getAllUsers({
+    page = 1,
+    limit = 10,
+    search,
+    isAdmin = false,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    isAdmin?: boolean;
+  }) {
+    const pageNumber = page || 1;
+    const limitNumber = limit || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const whereCondition: Prisma.UserWhereInput = {};
+
+    if (search) {
+      whereCondition.OR = [
+        { name: { contains: search } },
+        { email: { contains: search } },
+      ];
+    }
+
+    const selectFields: Prisma.UserSelect = isAdmin
+      ? {
+          id: true,
+          username: true,
+          name: true,
+          email: true,
+          avatar: true,
+          bio: true,
+          phone_number: true,
+          created_at: true,
+          updated_at: true,
+          status: true,
+          role: true,
+          subscription_plan_id: true,
+          subscription_plan_start_date: true,
+          subscription_plan_end_date: true,
+        }
+      : {
+          id: true,
+          username: true,
+          name: true,
+          email: true,
+          avatar: true,
+          bio: true,
+        };
+
+    const [users, total] = await Promise.all([
+      this.prismaService.user.findMany({
+        where: whereCondition,
+        skip,
+        take: limitNumber,
+        orderBy: { created_at: 'desc' },
+        select: isAdmin
+          ? selectFields
+          : {
+              ...selectFields,
+              outfits: {
+                select: {
+                  id: true,
+                  name: true,
+                  style: true,
+                  occasion: true,
+                  season: true,
+                  color_theme: true,
+                  created_at: true,
+                  updated_at: true,
+                  top: {
+                    select: {
+                      id: true,
+                      name: true,
+                      type: true,
+                      image: true,
+                      color_palette: true,
+                      material: true,
+                      style_tag: true,
+                    },
+                  },
+                  bottom: {
+                    select: {
+                      id: true,
+                      name: true,
+                      type: true,
+                      image: true,
+                      color_palette: true,
+                      material: true,
+                      style_tag: true,
+                    },
+                  },
+                  outwear: {
+                    select: {
+                      id: true,
+                      name: true,
+                      type: true,
+                      image: true,
+                      color_palette: true,
+                      material: true,
+                      style_tag: true,
+                    },
+                  },
+                  accessories: {
+                    select: {
+                      id: true,
+                      name: true,
+                      type: true,
+                      image: true,
+                      color_palette: true,
+                      material: true,
+                      style_tag: true,
+                    },
+                  },
+                },
+              },
+            },
+      }),
+      this.prismaService.user.count({
+        where: whereCondition,
+      }),
+    ]);
+
+    const total_pages = Math.ceil(total / limitNumber);
+
+    return {
+      data: users,
+      pagination: {
+        total,
+        page: pageNumber,
+        total_pages,
+      },
+    };
   }
 }
