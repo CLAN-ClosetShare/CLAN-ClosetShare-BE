@@ -6,10 +6,14 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
 import { CreateCommentReqDto, UpdateCommentReqDto } from './dto';
+import { CloudflareService } from 'src/database/cloudflare.service';
 
 @Injectable()
 export class CommentService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly cloudflareService: CloudflareService,
+  ) {}
 
   async createComment(
     createCommentReqDto: CreateCommentReqDto,
@@ -74,6 +78,19 @@ export class CommentService {
       },
     });
 
+    // Transform avatar keys to URLs
+    if (comment.user.avatar) {
+      comment.user.avatar = await this.cloudflareService.getDownloadedUrl(
+        comment.user.avatar,
+      );
+    }
+    if (comment.quote_comment?.user?.avatar) {
+      comment.quote_comment.user.avatar =
+        await this.cloudflareService.getDownloadedUrl(
+          comment.quote_comment.user.avatar,
+        );
+    }
+
     return comment;
   }
 
@@ -130,6 +147,20 @@ export class CommentService {
         },
       },
     });
+
+    // Transform avatar keys to URLs
+    if (updatedComment.user.avatar) {
+      updatedComment.user.avatar =
+        await this.cloudflareService.getDownloadedUrl(
+          updatedComment.user.avatar,
+        );
+    }
+    if (updatedComment.quote_comment?.user?.avatar) {
+      updatedComment.quote_comment.user.avatar =
+        await this.cloudflareService.getDownloadedUrl(
+          updatedComment.quote_comment.user.avatar,
+        );
+    }
 
     return updatedComment;
   }
@@ -207,25 +238,46 @@ export class CommentService {
       },
     });
 
-    // Format comments: thay content thành "Comment đã bị xóa" nếu is_deleted = true
-    const formattedComments = allComments.map((comment) => {
-      const formattedComment = { ...comment };
+    // Transform avatar keys to URLs for all users
+    const formattedComments = await Promise.all(
+      allComments.map(async (comment) => {
+        const formattedComment = { ...comment };
 
-      // Nếu comment bị xóa, thay content
-      if (comment.is_deleted) {
-        formattedComment.content = 'Comment đã bị xóa';
-      }
+        // Transform user avatar
+        if (formattedComment.user.avatar) {
+          formattedComment.user.avatar =
+            await this.cloudflareService.getDownloadedUrl(
+              formattedComment.user.avatar,
+            );
+        }
 
-      // Nếu quote_comment bị xóa, format quote_comment content
-      if (comment.quote_comment && comment.quote_comment.is_deleted) {
-        formattedComment.quote_comment = {
-          ...comment.quote_comment,
-          content: 'Comment đã bị xóa',
-        };
-      }
+        // Transform quote_comment user avatar
+        if (formattedComment.quote_comment?.user?.avatar) {
+          formattedComment.quote_comment.user.avatar =
+            await this.cloudflareService.getDownloadedUrl(
+              formattedComment.quote_comment.user.avatar,
+            );
+        }
 
-      return formattedComment;
-    });
+        // Nếu comment bị xóa, thay content
+        if (formattedComment.is_deleted) {
+          formattedComment.content = 'Comment đã bị xóa';
+        }
+
+        // Nếu quote_comment bị xóa, format quote_comment content
+        if (
+          formattedComment.quote_comment &&
+          formattedComment.quote_comment.is_deleted
+        ) {
+          formattedComment.quote_comment = {
+            ...formattedComment.quote_comment,
+            content: 'Comment đã bị xóa',
+          };
+        }
+
+        return formattedComment;
+      }),
+    );
 
     // Phân loại comments: gốc và replies
     const parentComments = formattedComments.filter(

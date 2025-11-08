@@ -6,10 +6,14 @@ import {
 import { CreatePostReqDto, UpdatePostReqDto } from './dto';
 import { PrismaService } from 'src/database/prisma.service';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
+import { CloudflareService } from 'src/database/cloudflare.service';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly cloudflareService: CloudflareService,
+  ) {}
 
   async createPost(
     createPostReqDto: CreatePostReqDto,
@@ -60,7 +64,19 @@ export class PostService {
       }),
     ]);
 
-    return { posts, total };
+    // Transform avatar keys to URLs for all authors
+    const postsWithAvatarUrls = await Promise.all(
+      posts.map(async (post) => {
+        if (post.author.avatar) {
+          post.author.avatar = await this.cloudflareService.getDownloadedUrl(
+            post.author.avatar,
+          );
+        }
+        return post;
+      }),
+    );
+
+    return { posts: postsWithAvatarUrls, total };
   }
 
   async updatePost(
