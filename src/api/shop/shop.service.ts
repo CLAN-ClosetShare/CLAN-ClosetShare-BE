@@ -7,11 +7,20 @@ import { CreateShopReqDto, UpdateShopReqDto } from './dto';
 import CreateShopResDto from './dto/create-shop.res.dto';
 import { PrismaService } from 'src/database/prisma.service';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
-import { Shop, SHOP_STAFF_STATUS } from '@prisma/client';
+import {
+  Shop,
+  SHOP_STAFF_STATUS,
+  PRODUCT_STATUS,
+  PRODUCT_TYPE,
+} from '@prisma/client';
+import { CloudflareService } from 'src/database/cloudflare.service';
 
 @Injectable()
 export class ShopService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly cloudflareService: CloudflareService,
+  ) {}
 
   async createShop(
     userToken: JwtPayloadType,
@@ -141,5 +150,131 @@ export class ShopService {
         status: SHOP_STAFF_STATUS.ACTIVE,
       },
     });
+  }
+
+  async getShopByUserId(
+    userId: string,
+    {
+      page = 1,
+      limit = 10,
+      search,
+      type,
+    }: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      type?: PRODUCT_TYPE;
+    },
+  ) {
+    // Find shop by userId through ShopStaff with role OWNER
+    const shopStaff = await this.prismaService.shopStaff.findFirst({
+      where: {
+        user_id: userId,
+        role: 'OWNER',
+        status: SHOP_STAFF_STATUS.ACTIVE,
+      },
+      include: {
+        shop: true,
+      },
+    });
+
+    if (!shopStaff || !shopStaff.shop) {
+      throw new UnprocessableEntityException('Shop not found for this user');
+    }
+
+    const shop = shopStaff.shop;
+    const shopId = shop.id;
+
+    // Get products with pagination and search
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      this.prismaService.product.findMany({
+        where: {
+          shop_id: shopId,
+          name: search ? { contains: search } : undefined,
+          type: type || undefined,
+          status: PRODUCT_STATUS.ACTIVE,
+        },
+        skip,
+        take: limit,
+        include: {
+          variants: {
+            include: {
+              pricings: true,
+            },
+          },
+          filter_props: {
+            include: {
+              filterProp: true,
+            },
+          },
+        },
+      }),
+      this.prismaService.product.count({
+        where: {
+          shop_id: shopId,
+          name: search ? { contains: search } : undefined,
+          type: type || undefined,
+          status: PRODUCT_STATUS.ACTIVE,
+        },
+      }),
+    ]);
+
+    // Process products: transform images and pricings
+    for (const product of products) {
+      delete (product as any).created_at;
+      delete (product as any).updated_at;
+      delete (product as any).status;
+
+      for (const variant of product.variants) {
+        // Replace image keys with signed URLs
+        if (variant.images && variant.images.length > 0) {
+          const signedUrls = await Promise.all(
+            variant.images.map(async (imageKey: string) => {
+              return await this.cloudflareService.getDownloadedUrl(imageKey);
+            }),
+          );
+          variant.images = signedUrls;
+        }
+
+        // Transform pricings into a single pricing object
+        const activePricing = variant.pricings.find((pricing) => {
+          const now = new Date();
+          return (
+            (!pricing.start_date || new Date(pricing.start_date) <= now) &&
+            (!pricing.end_date || new Date(pricing.end_date) >= now)
+          );
+        });
+
+        (variant as any).pricing = activePricing
+          ? {
+              price: activePricing.price,
+              start_date: activePricing.start_date,
+              end_date: activePricing.end_date,
+            }
+          : null;
+
+        // Remove the original pricings array
+        delete (variant as any).pricings;
+        delete (variant as any).created_at;
+        delete (variant as any).updated_at;
+        delete (variant as any).status;
+      }
+    }
+
+    const total_pages = Math.ceil(total / limit);
+
+    return {
+      shop,
+      products: {
+        data: products,
+        pagination: {
+          total,
+          page,
+          total_pages,
+        },
+      },
+    };
   }
 }
