@@ -65,6 +65,6 @@ export class SubscriptionController {
       orderCode,
     });
 
-    res.redirect('http://localhost:9000/subscriptions/order/success');
+    res.redirect('https://closetshare.vercel.app/payment/success');
   }
 }
