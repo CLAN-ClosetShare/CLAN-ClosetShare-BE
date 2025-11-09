@@ -25,13 +25,11 @@ export class ProductController {
   @Post('/shop')
   @UseGuards(AuthGuard)
   async createProduct(
-    @Query('shopId') shopId: string,
     @Body() createProductReqDto: CreateProductReqDto,
     @CurrentUser() currentUser: JwtPayloadType,
   ) {
     return await this.productService.createProduct(
       currentUser,
-      shopId,
       createProductReqDto,
     );
   }

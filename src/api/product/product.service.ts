@@ -11,6 +11,7 @@ import {
   PRODUCT_PRICING_STATUS,
   PRODUCT_STATUS,
   PRODUCT_TYPE,
+  SHOP_STAFF_STATUS,
 } from '@prisma/client';
 import { CloudflareService } from 'src/database/cloudflare.service';
 
@@ -24,16 +25,24 @@ export class ProductService {
 
   async createProduct(
     currentUser: JwtPayloadType,
-    shopId: string,
     createProductReqDto: CreateProductReqDto,
   ) {
     const { filter_props, ...rest } = createProductReqDto;
 
-    const isValidStaff = await this.isValidStaff(shopId, currentUser.id);
+    // Find shop where user is owner
+    const shopStaff = await this.prismaService.shopStaff.findFirst({
+      where: {
+        user_id: currentUser.id,
+        role: 'OWNER',
+        status: SHOP_STAFF_STATUS.ACTIVE,
+      },
+    });
 
-    if (!isValidStaff) {
-      throw new UnauthorizedException();
+    if (!shopStaff) {
+      throw new UnauthorizedException('You are not the owner of any shop');
     }
+
+    const shopId = shopStaff.shop_id;
 
     const product = await this.prismaService.product.create({
       data: {
