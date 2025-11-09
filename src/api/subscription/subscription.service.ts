@@ -73,7 +73,8 @@ export class SubscriptionService {
 
     const paymentUrl = await this.payosService.createPaymentUrl({
       amount: subscriptionPlan.price,
-      returnUrl: 'http://localhost:3000/subscriptions/order/payment-success',
+      returnUrl:
+        'http://103.163.24.150:3000/subscriptions/order/payment-success',
       cancelUrl: 'Huhu',
       orderCode: Number(orderCode),
       description: `Subscription Order`,
