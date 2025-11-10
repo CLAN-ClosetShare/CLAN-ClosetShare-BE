@@ -29,6 +29,21 @@ export class ShopService {
     avatar?: Express.Multer.File,
     background?: Express.Multer.File,
   ): Promise<CreateShopResDto> {
+    // Check if user already owns a shop
+    const existingShopOwner = await this.prismaService.shopStaff.findFirst({
+      where: {
+        user_id: userToken.id,
+        role: 'OWNER',
+        status: SHOP_STAFF_STATUS.ACTIVE,
+      },
+    });
+
+    if (existingShopOwner) {
+      throw new UnprocessableEntityException(
+        'User already owns a shop. Each user can only own one shop.',
+      );
+    }
+
     let avatarKey: string | undefined;
     let backgroundKey: string | undefined;
 
