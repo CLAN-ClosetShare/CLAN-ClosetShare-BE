@@ -1,12 +1,18 @@
 import { JwtPayloadType } from './../auth/types/jwt-payload.type';
 import {
   Injectable,
+  NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { ShopService } from '../shop/shop.service';
-import { CreateProductReqDto, CreateProductVariantReqDto } from './dto';
+import {
+  CreateProductReqDto,
+  CreateProductVariantReqDto,
+  UpdateProductReqDto,
+  UpdateProductVariantReqDto,
+} from './dto';
 import {
   PRODUCT_PRICING_STATUS,
   PRODUCT_STATUS,
@@ -336,5 +342,209 @@ export class ProductService {
     }
 
     return product;
+  }
+
+  async updateProduct(
+    currentUser: JwtPayloadType,
+    productId: string,
+    updateProductReqDto: UpdateProductReqDto,
+  ) {
+    const product = await this.prismaService.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const isValidStaff = await this.isValidStaff(
+      product.shop_id,
+      currentUser.id,
+    );
+    if (!isValidStaff) {
+      throw new UnauthorizedException(
+        'You are not authorized to update this product',
+      );
+    }
+
+    const { filter_props, ...rest } = updateProductReqDto;
+
+    // Update product
+    const updatedProduct = await this.prismaService.product.update({
+      where: { id: productId },
+      data: rest,
+    });
+
+    // Update filter_props if provided
+    if (filter_props !== undefined) {
+      // Delete existing filter_props
+      await this.prismaService.productByFilterProp.deleteMany({
+        where: { product_id: productId },
+      });
+
+      // Create new filter_props
+      if (filter_props.length > 0) {
+        const productByFilterProps = filter_props.map((prop) => ({
+          product_id: productId,
+          filter_prop_id: prop,
+        }));
+
+        await this.prismaService.productByFilterProp.createMany({
+          data: productByFilterProps,
+        });
+      }
+    }
+
+    return {
+      message: 'Product updated successfully',
+      product: updatedProduct,
+    };
+  }
+
+  async deleteProduct(currentUser: JwtPayloadType, productId: string) {
+    const product = await this.prismaService.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const isValidStaff = await this.isValidStaff(
+      product.shop_id,
+      currentUser.id,
+    );
+    if (!isValidStaff) {
+      throw new UnauthorizedException(
+        'You are not authorized to delete this product',
+      );
+    }
+
+    // Soft delete: set status to INACTIVE
+    await this.prismaService.product.update({
+      where: { id: productId },
+      data: { status: PRODUCT_STATUS.INACTIVE },
+    });
+
+    return { message: 'Product deleted successfully' };
+  }
+
+  async updateProductVariant(
+    currentUser: JwtPayloadType,
+    productId: string,
+    variantId: string,
+    updateProductVariantReqDto: UpdateProductVariantReqDto,
+    images?: Express.Multer.File[],
+  ) {
+    const product = await this.prismaService.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const variant = await this.prismaService.variant.findUnique({
+      where: { id: variantId },
+    });
+
+    if (!variant || variant.product_id !== productId) {
+      throw new NotFoundException('Product variant not found');
+    }
+
+    const isValidStaff = await this.isValidStaff(
+      product.shop_id,
+      currentUser.id,
+    );
+    if (!isValidStaff) {
+      throw new UnauthorizedException(
+        'You are not authorized to update this product variant',
+      );
+    }
+
+    const { price, stock, ...rest } = updateProductVariantReqDto;
+
+    // Update images if provided
+    let updatedImages = variant.images;
+    if (images && images.length > 0) {
+      updatedImages = await Promise.all(
+        images.map((image) => this.cloudflareService.uploadFile(image)),
+      );
+    }
+
+    // Update variant
+    const updatedVariant = await this.prismaService.variant.update({
+      where: { id: variantId },
+      data: {
+        ...rest,
+        stock: stock !== undefined ? parseInt(stock.toString()) : undefined,
+        images: updatedImages,
+      },
+    });
+
+    // Update pricing if price is provided
+    if (price !== undefined) {
+      // Deactivate old pricing
+      await this.prismaService.productPricing.updateMany({
+        where: {
+          variant_id: variantId,
+          status: PRODUCT_PRICING_STATUS.ACTIVE,
+        },
+        data: { status: PRODUCT_PRICING_STATUS.INACTIVE },
+      });
+
+      // Create new pricing
+      await this.prismaService.productPricing.create({
+        data: {
+          variant_id: variantId,
+          price: parseInt(price.toString()),
+        },
+      });
+    }
+
+    return {
+      message: 'Product variant updated successfully',
+      variant: updatedVariant,
+    };
+  }
+
+  async deleteProductVariant(
+    currentUser: JwtPayloadType,
+    productId: string,
+    variantId: string,
+  ) {
+    const product = await this.prismaService.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const variant = await this.prismaService.variant.findUnique({
+      where: { id: variantId },
+    });
+
+    if (!variant || variant.product_id !== productId) {
+      throw new NotFoundException('Product variant not found');
+    }
+
+    const isValidStaff = await this.isValidStaff(
+      product.shop_id,
+      currentUser.id,
+    );
+    if (!isValidStaff) {
+      throw new UnauthorizedException(
+        'You are not authorized to delete this product variant',
+      );
+    }
+
+    // Soft delete: set status to INACTIVE
+    await this.prismaService.variant.update({
+      where: { id: variantId },
+      data: { status: PRODUCT_STATUS.INACTIVE },
+    });
+
+    return { message: 'Product variant deleted successfully' };
   }
 }

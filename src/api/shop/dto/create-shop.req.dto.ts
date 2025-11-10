@@ -1,25 +1,25 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 class CreateShopReqDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  description: string;
+  description?: string;
 
   @IsString()
   @IsNotEmpty()
   address: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  phone_number: string;
+  phone_number?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  email: string;
+  email?: string;
 }
 
 export default CreateShopReqDto;

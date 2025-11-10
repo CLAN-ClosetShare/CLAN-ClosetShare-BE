@@ -25,9 +25,28 @@ export class ShopService {
   async createShop(
     userToken: JwtPayloadType,
     createShopReqDto: CreateShopReqDto,
+    avatar?: Express.Multer.File,
+    background?: Express.Multer.File,
   ): Promise<CreateShopResDto> {
+    let avatarKey: string | undefined;
+    let backgroundKey: string | undefined;
+
+    // Upload avatar if provided
+    if (avatar) {
+      avatarKey = await this.cloudflareService.uploadFile(avatar);
+    }
+
+    // Upload background if provided
+    if (background) {
+      backgroundKey = await this.cloudflareService.uploadFile(background);
+    }
+
     const shop = await this.prismaService.shop.create({
-      data: { ...createShopReqDto },
+      data: {
+        ...createShopReqDto,
+        avatar: avatarKey,
+        background: backgroundKey,
+      },
     });
 
     await this.prismaService.shopStaff.create({
@@ -38,10 +57,23 @@ export class ShopService {
       },
     });
 
-    return { ...shop };
+    // Transform avatar and background keys to URLs
+    const shopWithUrls = { ...shop };
+    if (shopWithUrls.avatar) {
+      shopWithUrls.avatar = await this.cloudflareService.getDownloadedUrl(
+        shopWithUrls.avatar,
+      );
+    }
+    if (shopWithUrls.background) {
+      shopWithUrls.background = await this.cloudflareService.getDownloadedUrl(
+        shopWithUrls.background,
+      );
+    }
+
+    return shopWithUrls;
   }
 
-  async getShopById(id: string): Promise<Shop> {
+  async getShopById(id: string): Promise<any> {
     const shop = await this.prismaService.shop.findFirst({
       where: { id },
     });
@@ -50,7 +82,20 @@ export class ShopService {
       throw new UnprocessableEntityException();
     }
 
-    return shop;
+    // Transform avatar and background keys to URLs
+    const shopWithUrls = { ...shop };
+    if (shopWithUrls.avatar) {
+      shopWithUrls.avatar = await this.cloudflareService.getDownloadedUrl(
+        shopWithUrls.avatar,
+      );
+    }
+    if (shopWithUrls.background) {
+      shopWithUrls.background = await this.cloudflareService.getDownloadedUrl(
+        shopWithUrls.background,
+      );
+    }
+
+    return shopWithUrls;
   }
 
   async getShops({
@@ -78,8 +123,27 @@ export class ShopService {
 
     const total_pages = Math.ceil(total / limit);
 
+    // Transform avatar and background keys to URLs for all shops
+    const shopsWithUrls = await Promise.all(
+      shops.map(async (shop) => {
+        const shopWithUrls = { ...shop };
+        if (shopWithUrls.avatar) {
+          shopWithUrls.avatar = await this.cloudflareService.getDownloadedUrl(
+            shopWithUrls.avatar,
+          );
+        }
+        if (shopWithUrls.background) {
+          shopWithUrls.background =
+            await this.cloudflareService.getDownloadedUrl(
+              shopWithUrls.background,
+            );
+        }
+        return shopWithUrls;
+      }),
+    );
+
     return {
-      data: shops,
+      data: shopsWithUrls,
       pagination: {
         total,
         page,
@@ -265,8 +329,21 @@ export class ShopService {
 
     const total_pages = Math.ceil(total / limit);
 
+    // Transform avatar and background keys to URLs
+    const shopWithUrls = { ...shop };
+    if (shopWithUrls.avatar) {
+      shopWithUrls.avatar = await this.cloudflareService.getDownloadedUrl(
+        shopWithUrls.avatar,
+      );
+    }
+    if (shopWithUrls.background) {
+      shopWithUrls.background = await this.cloudflareService.getDownloadedUrl(
+        shopWithUrls.background,
+      );
+    }
+
     return {
-      shop,
+      shop: shopWithUrls,
       products: {
         data: products,
         pagination: {

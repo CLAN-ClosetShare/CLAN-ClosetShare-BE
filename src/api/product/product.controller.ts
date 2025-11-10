@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -11,7 +12,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
-import { CreateProductReqDto, CreateProductVariantReqDto } from './dto';
+import {
+  CreateProductReqDto,
+  CreateProductVariantReqDto,
+  UpdateProductReqDto,
+  UpdateProductVariantReqDto,
+} from './dto';
 import { ProductService } from './product.service';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
@@ -76,5 +82,57 @@ export class ProductController {
 
   @Put(':productId')
   @UseGuards(AuthGuard)
-  async updateProduct() {}
+  async updateProduct(
+    @Param('productId') productId: string,
+    @CurrentUser() currentUser: JwtPayloadType,
+    @Body() updateProductReqDto: UpdateProductReqDto,
+  ) {
+    return await this.productService.updateProduct(
+      currentUser,
+      productId,
+      updateProductReqDto,
+    );
+  }
+
+  @Delete(':productId')
+  @UseGuards(AuthGuard)
+  async deleteProduct(
+    @Param('productId') productId: string,
+    @CurrentUser() currentUser: JwtPayloadType,
+  ) {
+    return await this.productService.deleteProduct(currentUser, productId);
+  }
+
+  @Put(':productId/variants/:variantId')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(FilesInterceptor('images'))
+  async updateProductVariant(
+    @Param('productId') productId: string,
+    @Param('variantId') variantId: string,
+    @CurrentUser() currentUser: JwtPayloadType,
+    @Body() updateProductVariantReqDto: UpdateProductVariantReqDto,
+    @UploadedFiles() images?: Express.Multer.File[],
+  ) {
+    return await this.productService.updateProductVariant(
+      currentUser,
+      productId,
+      variantId,
+      updateProductVariantReqDto,
+      images,
+    );
+  }
+
+  @Delete(':productId/variants/:variantId')
+  @UseGuards(AuthGuard)
+  async deleteProductVariant(
+    @Param('productId') productId: string,
+    @Param('variantId') variantId: string,
+    @CurrentUser() currentUser: JwtPayloadType,
+  ) {
+    return await this.productService.deleteProductVariant(
+      currentUser,
+      productId,
+      variantId,
+    );
+  }
 }
