@@ -7,7 +7,9 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ShopService } from './shop.service';
 import { CreateShopReqDto, UpdateShopReqDto } from './dto';
@@ -15,6 +17,7 @@ import CreateShopResDto from './dto/create-shop.res.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @Controller('shops')
 export class ShopController {
@@ -22,11 +25,30 @@ export class ShopController {
 
   @Post('')
   @UseGuards(AuthGuard)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'avatar', maxCount: 1 },
+      { name: 'background', maxCount: 1 },
+    ]),
+  )
   async createShop(
     @Body() createShopDto: CreateShopReqDto,
     @CurrentUser() userToken: JwtPayloadType,
+    @UploadedFiles()
+    files?: {
+      avatar?: Express.Multer.File[];
+      background?: Express.Multer.File[];
+    },
   ): Promise<CreateShopResDto> {
-    return await this.shopService.createShop(userToken, createShopDto);
+    const avatar = files?.avatar?.[0];
+    const background = files?.background?.[0];
+
+    return await this.shopService.createShop(
+      userToken,
+      createShopDto,
+      avatar,
+      background,
+    );
   }
 
   @Get('user/:userId')
