@@ -18,6 +18,7 @@ import {
   PRODUCT_STATUS,
   PRODUCT_TYPE,
   SHOP_STAFF_STATUS,
+  SHOP_STATUS,
 } from '@prisma/client';
 import { CloudflareService } from 'src/database/cloudflare.service';
 
@@ -95,6 +96,9 @@ export class ProductService {
         name: { contains: search },
         type: type || undefined,
         status: PRODUCT_STATUS.ACTIVE,
+        shop: {
+          status: { not: SHOP_STATUS.SUSPENDED },
+        },
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -155,7 +159,14 @@ export class ProductService {
     }
 
     const total = await this.prismaService.product.count({
-      where: { shop_id: shopId, name: { contains: search }, type },
+      where: {
+        shop_id: shopId,
+        name: { contains: search },
+        type,
+        shop: {
+          status: { not: SHOP_STATUS.SUSPENDED },
+        },
+      },
     });
     const total_pages = Math.ceil(total / limit);
 
@@ -251,6 +262,11 @@ export class ProductService {
           stock: {
             gte: parseInt(item.quantity),
           },
+          product: {
+            shop: {
+              status: { not: SHOP_STATUS.SUSPENDED },
+            },
+          },
         },
 
         select: {
@@ -288,7 +304,13 @@ export class ProductService {
   //TODO: handle discount price
   async getProductById(productId: string) {
     const product = await this.prismaService.product.findFirst({
-      where: { id: productId, status: PRODUCT_STATUS.ACTIVE },
+      where: {
+        id: productId,
+        status: PRODUCT_STATUS.ACTIVE,
+        shop: {
+          status: { not: SHOP_STATUS.SUSPENDED },
+        },
+      },
       include: {
         variants: {
           include: {
