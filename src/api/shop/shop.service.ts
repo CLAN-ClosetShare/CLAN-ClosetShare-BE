@@ -10,6 +10,7 @@ import { JwtPayloadType } from '../auth/types/jwt-payload.type';
 import {
   Shop,
   SHOP_STAFF_STATUS,
+  SHOP_STATUS,
   PRODUCT_STATUS,
   PRODUCT_TYPE,
 } from '@prisma/client';
@@ -28,6 +29,21 @@ export class ShopService {
     avatar?: Express.Multer.File,
     background?: Express.Multer.File,
   ): Promise<CreateShopResDto> {
+    // Check if user already owns a shop
+    const existingShopOwner = await this.prismaService.shopStaff.findFirst({
+      where: {
+        user_id: userToken.id,
+        role: 'OWNER',
+        status: SHOP_STAFF_STATUS.ACTIVE,
+      },
+    });
+
+    if (existingShopOwner) {
+      throw new UnprocessableEntityException(
+        'User already owns a shop. Each user can only own one shop.',
+      );
+    }
+
     let avatarKey: string | undefined;
     let backgroundKey: string | undefined;
 
@@ -75,7 +91,10 @@ export class ShopService {
 
   async getShopById(id: string): Promise<any> {
     const shop = await this.prismaService.shop.findFirst({
-      where: { id },
+      where: {
+        id,
+        status: { not: SHOP_STATUS.SUSPENDED },
+      },
     });
 
     if (!shop) {
@@ -110,6 +129,7 @@ export class ShopService {
     const shops = await this.prismaService.shop.findMany({
       where: {
         name: { contains: search },
+        status: { not: SHOP_STATUS.SUSPENDED },
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -118,6 +138,7 @@ export class ShopService {
     const total = await this.prismaService.shop.count({
       where: {
         name: { contains: search },
+        status: { not: SHOP_STATUS.SUSPENDED },
       },
     });
 
@@ -236,6 +257,9 @@ export class ShopService {
         user_id: userId,
         role: 'OWNER',
         status: SHOP_STAFF_STATUS.ACTIVE,
+        shop: {
+          status: { not: SHOP_STATUS.SUSPENDED },
+        },
       },
       include: {
         shop: true,
@@ -259,6 +283,9 @@ export class ShopService {
           name: search ? { contains: search } : undefined,
           type: type || undefined,
           status: PRODUCT_STATUS.ACTIVE,
+          shop: {
+            status: { not: SHOP_STATUS.SUSPENDED },
+          },
         },
         skip,
         take: limit,
@@ -281,6 +308,9 @@ export class ShopService {
           name: search ? { contains: search } : undefined,
           type: type || undefined,
           status: PRODUCT_STATUS.ACTIVE,
+          shop: {
+            status: { not: SHOP_STATUS.SUSPENDED },
+          },
         },
       }),
     ]);
