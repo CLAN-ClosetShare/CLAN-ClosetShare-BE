@@ -32,6 +32,13 @@ export class PostService {
   async getPostById(postId: string) {
     return await this.prismaService.post.findUnique({
       where: { id: postId },
+      include: {
+        _count: {
+          select: {
+            reacts: true,
+          },
+        },
+      },
     });
   }
 
@@ -55,6 +62,11 @@ export class PostService {
               name: true,
               email: true,
               avatar: true,
+            },
+          },
+          _count: {
+            select: {
+              reacts: true,
             },
           },
         },
