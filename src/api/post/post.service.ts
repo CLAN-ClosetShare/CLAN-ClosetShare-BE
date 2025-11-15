@@ -42,7 +42,7 @@ export class PostService {
     });
   }
 
-  async getAllPosts(page: string, limit: string, userId?: string) {
+  async getAllPosts(page: string, limit: string, userId?: string, currentUserId?: string) {
     const pageNumber = parseInt(page) || 1;
     const limitNumber = parseInt(limit) || 10;
     const skip = (pageNumber - 1) * limitNumber;
@@ -64,9 +64,22 @@ export class PostService {
               avatar: true,
             },
           },
+          reacts: currentUserId ? {
+            where: {
+              user_id: currentUserId,
+              is_active: true,
+            },
+            select: {
+              id: true,
+            },
+          } : false,
           _count: {
             select: {
-              reacts: true,
+              reacts: {
+                where: {
+                  is_active: true,
+                },
+              },
             },
           },
         },
@@ -76,7 +89,7 @@ export class PostService {
       }),
     ]);
 
-    // Transform avatar keys to URLs for all authors
+    // Transform avatar keys to URLs for all authors and add likes/isLiked
     const postsWithAvatarUrls = await Promise.all(
       posts.map(async (post) => {
         if (post.author.avatar) {
@@ -84,7 +97,19 @@ export class PostService {
             post.author.avatar,
           );
         }
-        return post;
+        
+        // Add likes count and isLiked flag
+        const likes = post._count?.reacts || 0;
+        const isLiked = currentUserId ? (post.reacts && post.reacts.length > 0) : false;
+        
+        // Remove reacts array from response (we only need isLiked flag)
+        const { reacts, ...postWithoutReacts } = post as any;
+        
+        return {
+          ...postWithoutReacts,
+          likes,
+          isLiked,
+        };
       }),
     );
 
