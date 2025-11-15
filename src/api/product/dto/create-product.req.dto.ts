@@ -1,5 +1,5 @@
 import { PRODUCT_TYPE } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, ArrayMinSize, ValidateIf } from 'class-validator';
 
 class CreateProductReqDto {
   @IsString()
@@ -15,6 +15,7 @@ class CreateProductReqDto {
   type: PRODUCT_TYPE;
 
   @IsString({ each: true })
+  @ValidateIf((o) => o.filter_props && o.filter_props.length > 0)
   @IsNotEmpty({ each: true })
   filter_props: string[];
 }
