@@ -72,9 +72,20 @@ export class ProductService {
       [],
     );
 
-    await this.prismaService.productByFilterProp.createMany({
-      data: productByFilterProps,
-    });
+    if (productByFilterProps.length > 0) {
+      await this.prismaService.productByFilterProp.createMany({
+        data: productByFilterProps,
+      });
+    }
+
+    // Return product with only necessary fields
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      type: product.type,
+      shop_id: product.shop_id,
+    };
   }
 
   async getAllProductsByShopId({
