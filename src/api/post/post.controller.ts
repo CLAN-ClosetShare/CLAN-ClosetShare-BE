@@ -42,8 +42,9 @@ export class PostController {
     @Query('page') page: string,
     @Query('limit') limit: string,
     @Query('user_id') userId: string,
+    @CurrentUser() currentUser?: JwtPayloadType,
   ) {
-    return await this.postService.getAllPosts(page, limit, userId);
+    return await this.postService.getAllPosts(page, limit, userId, currentUser?.id);
   }
 
   @Put(':id')
