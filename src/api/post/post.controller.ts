@@ -59,12 +59,17 @@ export class PostController {
           currentUserId = payload.id;
         }
       }
-    } catch (error) {
+    } catch {
       // Token invalid or missing - continue without user (public access)
       currentUserId = undefined;
     }
-    
-    return await this.postService.getAllPosts(page, limit, userId, currentUserId);
+
+    return await this.postService.getAllPosts(
+      page,
+      limit,
+      userId,
+      currentUserId,
+    );
   }
 
   @Put(':id')

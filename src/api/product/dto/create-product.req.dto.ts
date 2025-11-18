@@ -1,5 +1,5 @@
 import { PRODUCT_TYPE } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsString, ArrayMinSize, ValidateIf } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 
 class CreateProductReqDto {
   @IsString()

@@ -13,6 +13,7 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { JwtPayloadType } from '../auth/types/jwt-payload.type';
 import { Response } from 'express';
+import { GetOrdersQueryDto } from './dto/get-orders-query.dto';
 
 @Controller('orders')
 export class OrderController {
@@ -43,5 +44,21 @@ export class OrderController {
     });
 
     res.redirect(`http://localhost:6666/order/${order.id}`);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async getMyOrders(
+    @CurrentUser() currentUser: JwtPayloadType,
+    @Query() query: GetOrdersQueryDto,
+  ) {
+    const page = query.page ? parseInt(query.page, 10) : 1;
+    const limit = query.limit ? parseInt(query.limit, 10) : 10;
+
+    return await this.orderService.getOrdersByUser({
+      userId: currentUser.id,
+      page: Number.isFinite(page) && page > 0 ? page : 1,
+      limit: Number.isFinite(limit) && limit > 0 ? limit : 10,
+    });
   }
 }
