@@ -174,4 +174,51 @@ export class OrderService {
 
     return orderResult;
   }
+
+  async getOrdersByUser({
+    userId,
+    page = 1,
+    limit = 10,
+  }: {
+    userId: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const pageNumber = page && page > 0 ? page : 1;
+    const limitNumber = limit && limit > 0 ? limit : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [orders, total] = await this.prismaService.$transaction([
+      this.prismaService.order.findMany({
+        where: { user_id: userId },
+        include: {
+          order_details: {
+            include: {
+              variant: {
+                include: {
+                  product: true,
+                },
+              },
+            },
+          },
+          transactions: true,
+        },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limitNumber,
+      }),
+      this.prismaService.order.count({
+        where: { user_id: userId },
+      }),
+    ]);
+
+    return {
+      data: orders,
+      pagination: {
+        total,
+        page: pageNumber,
+        total_pages: Math.ceil(total / limitNumber) || 0,
+      },
+    };
+  }
 }

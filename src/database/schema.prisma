@@ -32,6 +32,7 @@ model User {
   comments Comment[]
   closet_items   ClosetItem[]
   outfits     Outfit[]
+  cart      Cart?
 
   @@map("users")
   SubscriptionPlan SubscriptionPlan[] @relation("UserSubscriptionPlan")
@@ -160,6 +161,7 @@ model Variant {
   images String[]
   pricings ProductPricing[]
   orders   OrderDetail[]
+  cart_items CartItem[]
 
   @@map("variants")
 }
@@ -287,6 +289,31 @@ model OrderDetail {
   variant  Variant  @relation(fields: [variant_id], references: [id])
 
   @@map("order_details")
+}
+
+model Cart {
+  id       String   @id @default(uuid())
+  user_id    String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user     User     @relation(fields: [user_id], references: [id])
+  items    CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id       String   @id @default(uuid())
+  cart_id    String
+  variant_id String
+  quantity   Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  cart     Cart     @relation(fields: [cart_id], references: [id])
+  variant    Variant    @relation(fields: [variant_id], references: [id])
+
+  @@unique([cart_id, variant_id], name: "cart_id_variant_id")
+  @@map("cart_items")
 }
 
 model SubscriptionPlan {

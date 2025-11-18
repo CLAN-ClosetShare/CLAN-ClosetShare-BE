@@ -104,7 +104,9 @@ export class ProductService {
     const products = await this.prismaService.product.findMany({
       where: {
         shop_id: shopId,
-        ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
+        ...(search
+          ? { name: { contains: search, mode: 'insensitive' as const } }
+          : {}),
         ...(type ? { type } : {}),
         status: PRODUCT_STATUS.ACTIVE,
         shop: {

@@ -14,6 +14,7 @@ import { ClosetModule } from './closet/closet.module';
 import { OutfitModule } from './outfit/outfit.module';
 import { ReactModule } from './react/react.module';
 import { CommentModule } from './comment/comment.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CommentModule } from './comment/comment.module';
     SubscriptionModule,
     ReactModule,
     CommentModule,
+    CartModule,
   ],
 })
 export class ApiModule {}
