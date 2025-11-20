@@ -43,7 +43,9 @@ export class OrderController {
       cancel: Boolean(cancel),
     });
 
-    res.redirect(`http://localhost:6666/order/${order.id}`);
+    res.redirect(
+      `https://closetshare.vercel.app/payment/success?order_id=${order.id}`,
+    );
   }
 
   @Get('me')
