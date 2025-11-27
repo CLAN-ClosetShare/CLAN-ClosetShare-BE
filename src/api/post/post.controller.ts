@@ -86,6 +86,15 @@ export class PostController {
     );
   }
 
+  @Delete(':id')
+  @UseGuards(AuthGuard)
+  async deletePost(
+    @Param('id') postId: string,
+    @CurrentUser() currentUser: JwtPayloadType,
+  ) {
+    return await this.postService.deletePost(postId, currentUser);
+  }
+
   @Post(':id/reacts')
   @UseGuards(AuthGuard)
   async reactPost(
