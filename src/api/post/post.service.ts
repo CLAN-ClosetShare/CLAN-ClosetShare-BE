@@ -152,4 +152,24 @@ export class PostService {
 
     return updatedPost;
   }
+
+  async deletePost(postId: string, currentUser: JwtPayloadType) {
+    // Check post exists and permission
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+    });
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.author_id !== currentUser.id)
+      throw new UnauthorizedException(
+        'You are not authorized to delete this post',
+      );
+
+    // Delete related comments
+    await this.prismaService.comment.deleteMany({ where: { post_id: postId } });
+    // Delete related reacts
+    await this.prismaService.react.deleteMany({ where: { post_id: postId } });
+    // Delete the post
+    await this.prismaService.post.delete({ where: { id: postId } });
+    return { message: 'Post and related comments/reacts deleted successfully' };
+  }
 }
